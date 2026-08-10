@@ -1,0 +1,249 @@
+{
+  "info": {
+    "name": "Mini ERP + CRM Operations Portal API",
+    "description": "Complete Postman collection for Wholesale/Distribution Mini ERP + CRM Portal REST APIs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "1. Admin Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "2. Sales Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"sales@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "3. Get Current Session User",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer CRM",
+      "item": [
+        {
+          "name": "1. Get All Customers",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customers?status=Active",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers"],
+              "query": [{ "key": "status", "value": "Active" }]
+            }
+          }
+        },
+        {
+          "name": "2. Create Customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_name\": \"Rohan Malhotra\",\n  \"mobile_number\": \"+91 9811223344\",\n  \"email\": \"rohan@malhotratraders.com\",\n  \"business_name\": \"Malhotra Industrial Supplies\",\n  \"gst_number\": \"27AABCU9911R1ZO\",\n  \"customer_type\": \"Wholesale\",\n  \"address\": \"Industrial Estate, Pune, MH\",\n  \"status\": \"Active\",\n  \"notes\": \"Regular bulk buyer\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers"]
+            }
+          }
+        },
+        {
+          "name": "3. Record CRM Follow-up Note",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"Discussed Q3 bulk pricing discount. Client requested quotation for 50 power drills.\",\n  \"follow_up_date\": \"2026-08-20\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/c-001/followups",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "c-001", "followups"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Product & Inventory",
+      "item": [
+        {
+          "name": "1. Get Products (Low Stock Filter)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products?lowStock=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"],
+              "query": [{ "key": "lowStock", "value": "true" }]
+            }
+          }
+        },
+        {
+          "name": "2. Create Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_name\": \"Cordless Angle Grinder 20V\",\n  \"sku\": \"AGR-CRD-20V\",\n  \"category\": \"Power Tools\",\n  \"unit_price\": 4200.00,\n  \"current_stock\": 25,\n  \"min_stock_alert\": 5,\n  \"location\": \"Aisle 4 - Shelf C\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"]
+            }
+          }
+        },
+        {
+          "name": "3. Manual Stock Adjustment IN",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity_changed\": 10,\n  \"movement_type\": \"IN\",\n  \"reason\": \"Vendor Restock Shipment #889\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products/p-001/stock-movement",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "p-001", "stock-movement"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sales Challans & Transactions",
+      "item": [
+        {
+          "name": "1. Create Draft Challan",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_id\": \"c-001\",\n  \"notes\": \"Standard dispatch\",\n  \"items\": [\n    {\n      \"product_id\": \"p-001\",\n      \"quantity\": 2\n    }\n  ],\n  \"confirm_immediately\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/challans",
+              "host": ["{{baseUrl}}"],
+              "path": ["challans"]
+            }
+          }
+        },
+        {
+          "name": "2. Confirm Challan (Deducts Stock in DB Transaction)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/challans/ch-002/confirm",
+              "host": ["{{baseUrl}}"],
+              "path": ["challans", "ch-002", "confirm"]
+            }
+          }
+        },
+        {
+          "name": "3. Error Case: Insufficient Stock (Returns 400 Bad Request)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_id\": \"c-001\",\n  \"notes\": \"Test over-stock request\",\n  \"items\": [\n    {\n      \"product_id\": \"p-003\",\n      \"quantity\": 9999\n    }\n  ],\n  \"confirm_immediately\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/challans",
+              "host": ["{{baseUrl}}"],
+              "path": ["challans"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
