@@ -41,8 +41,8 @@ export const Dashboard: React.FC = () => {
     <div className="page-container">
       <div className="page-header">
         <div className="page-header-text">
-          <h1>Operations & Logistics Dashboard</h1>
-          <p>Real-time inventory stock metrics, CRM customer leads, and sales dispatch status</p>
+          <h1>Dashboard</h1>
+          <p>Overview of customers, inventory and sales challans</p>
         </div>
       </div>
 

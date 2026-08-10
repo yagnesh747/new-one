@@ -1,65 +1,78 @@
 # Mini ERP + CRM Operations Portal
 
-A full-stack internal operations portal for a wholesale/distribution company, built as a technical case study. Covers customer CRM, product inventory, stock movements, and sales challan workflow with role-based access control.
+Full-stack internal operations portal for a wholesale/distribution business. Built with React, Node.js, Express, TypeScript, and PostgreSQL.
 
 ---
 
-## Project Overview
+## 1. Project Overview
 
-An internal ERP/CRM portal used by four operational roles — **Admin**, **Sales**, **Warehouse**, and **Accounts** — to manage:
+An internal operations tool for managing wholesale and distribution workflows across four key roles: **Admin**, **Sales**, **Warehouse**, and **Accounts**.
 
-- **Customer CRM**: customer directory, lead tracking, follow-up timeline
-- **Products & Inventory**: SKU catalog, stock levels, low-stock alerts, warehouse rack locations
-- **Stock Movements**: full audit log of every IN/OUT movement with reasons
-- **Sales Challans**: draft-to-confirm workflow with atomic PostgreSQL transactions — stock is only reduced upon confirmation, never goes negative, and historical product snapshots are preserved
-
----
-
-## Technology Stack
-
-| Layer      | Technology                                      |
-|------------|-------------------------------------------------|
-| Frontend   | React 19, TypeScript, Vite, React Router 7, Axios |
-| Backend    | Node.js, TypeScript, Express.js                 |
-| Database   | PostgreSQL (via `pg`) with embedded PGlite fallback |
-| Auth       | JWT (`jsonwebtoken`), bcrypt password hashing   |
-| Validation | Zod (backend), HTML5 constraints (frontend)     |
-| Styling    | Vanilla CSS — clean internal admin system style |
+Key modules:
+- **Customer CRM**: Lead management, customer directory, follow-up history
+- **Products & Inventory**: SKU catalog, stock levels, location tracking, low stock alerts
+- **Stock Movements**: IN/OUT audit log with movement reasons and user tracking
+- **Sales Challans**: Sales dispatch workflow with stock validation and atomic database transactions
 
 ---
 
-## Architecture
+## 2. Tech Stack
+
+- **Frontend**: React 19, TypeScript, Vite, React Router 7, Axios, Vanilla CSS
+- **Backend**: Node.js, TypeScript, Express.js, JWT, bcryptjs, Zod
+- **Database**: PostgreSQL (with embedded PGlite fallback for local dev)
+
+---
+
+## 3. Features
+
+- **Role-Based Access Control**: Enforced on API routes and UI navigation (Admin, Sales, Warehouse, Accounts)
+- **CRM Follow-up System**: Track customer status, follow-up dates, and notes timeline
+- **Inventory Audit Log**: Record stock entries/dispatches with reason logging
+- **Atomic Challan Confirmation**: Locks product rows in a DB transaction, validates stock availability, deducts stock, and creates movement records
+- **Product Snapshot**: Challans store product name, SKU, and unit price at creation time
+
+---
+
+## 4. Architecture
+
+Follows standard Controller-Service pattern:
+- **Controllers**: Handle HTTP request parsing, response formatting, and error forwarding
+- **Services**: Implement business logic, database queries, and transaction management
+- **Middleware**: JWT authentication, role guards, Zod validation, error handling
+- **Config**: Database pool initialization with auto-fallback to embedded PGlite
+
+---
+
+## 5. Folder Structure
 
 ```
 full stack/
 ├── backend/
 │   ├── src/
-│   │   ├── config/         # DB pool / PGlite init, env loading
-│   │   ├── controllers/    # Express route handlers
-│   │   ├── db/             # schema.sql, seed.ts
-│   │   ├── middleware/     # authMiddleware, roleMiddleware, validate, errorHandler
-│   │   ├── models/         # TypeScript interfaces (User, Customer, Product, etc.)
-│   │   ├── routes/         # Express routers per module
-│   │   ├── services/       # Business logic & SQL queries
-│   │   ├── utils/          # JWT helpers, bcrypt, AppError class
+│   │   ├── config/         # Database configuration & initialization
+│   │   ├── controllers/    # Route controllers
+│   │   ├── db/             # PostgreSQL schema & seed script
+│   │   ├── middleware/     # Auth, RBAC, error handling, validation
+│   │   ├── models/         # TypeScript interfaces
+│   │   ├── routes/         # Express API routes
+│   │   ├── services/       # Database & business logic
+│   │   ├── utils/          # JWT, password hashing, error helpers
 │   │   ├── validators/     # Zod validation schemas
-│   │   ├── app.ts          # Express setup, CORS, route mounting
-│   │   └── server.ts       # DB init + auto-seed + HTTP listen
-│   ├── .env
+│   │   ├── app.ts          # Express app configuration
+│   │   └── server.ts       # HTTP server entry point
 │   ├── .env.example
 │   └── package.json
 ├── frontend/
 │   ├── src/
-│   │   ├── api/            # Axios client + typed API wrappers per module
-│   │   ├── components/     # Sidebar, TopHeader, StatusBadge, Pagination
-│   │   ├── context/        # AuthContext (JWT session, role state)
-│   │   ├── pages/          # Login, Dashboard, Customers, CustomerDetail,
-│   │   │                   # Products, Inventory, Challans, CreateChallan,
-│   │   │                   # ChallanDetail, Users
-│   │   ├── styles/         # index.css — clean professional admin CSS
-│   │   ├── types/          # Shared TypeScript types
-│   │   ├── App.tsx         # React Router with protected layout + role guards
-│   │   └── main.tsx        # Entry point
+│   │   ├── api/            # API client & request wrappers
+│   │   ├── components/     # Reusable UI components
+│   │   ├── context/        # Authentication state context
+│   │   ├── pages/          # Application views
+│   │   ├── styles/         # Global styles
+│   │   ├── types/          # Shared TypeScript interfaces
+│   │   ├── App.tsx         # Route configuration & layout
+│   │   └── main.tsx        # Application entry point
 │   ├── .env.example
 │   └── package.json
 ├── postman_collection.json
@@ -68,28 +81,28 @@ full stack/
 
 ---
 
-## Database Schema
+## 6. Database Setup
 
-Seven tables with proper PKs, FKs, indexes, and constraints:
+Database schema uses `CREATE TABLE IF NOT EXISTS` across 7 tables:
+`users`, `customers`, `customer_followups`, `products`, `stock_movements`, `challans`, `challan_items`.
 
-| Table                | Purpose                                            |
-|----------------------|----------------------------------------------------|
-| `users`              | Portal user accounts with roles                    |
-| `customers`          | Customer CRM directory                             |
-| `customer_followups` | CRM follow-up log per customer                     |
-| `products`           | Product catalog with stock and min-alert levels    |
-| `stock_movements`    | Audit log of every IN/OUT stock event              |
-| `challans`           | Sales challan headers (Draft/Confirmed/Cancelled)  |
-| `challan_items`      | Line items with **product snapshot** at sale time  |
+### Schema execution (Local PostgreSQL):
+```bash
+psql -U postgres -c "CREATE DATABASE minierp_crm;"
+psql -U postgres -d minierp_crm -f backend/src/db/schema.sql
+npm run db:seed --prefix backend
+```
 
-All schema migrations use `CREATE TABLE IF NOT EXISTS` — safe to rerun.
+### Embedded PGlite engine (Fallback):
+If no local PostgreSQL instance is running, the server automatically initializes PGlite, creates tables, and auto-seeds initial data on first run.
 
 ---
 
-## Environment Variables
+## 7. Environment Variables
 
-### Backend (`backend/.env`)
+Documented in `backend/.env.example` and `frontend/.env.example`:
 
+### `backend/.env`
 ```env
 PORT=5000
 NODE_ENV=development
@@ -98,20 +111,9 @@ JWT_SECRET=super_secret_jwt_key_minierp_crm_2026_dev
 CLIENT_URL=http://localhost:5173
 ```
 
-### Frontend
-
-The frontend uses Vite's dev proxy — no separate `.env` needed for local development. All API calls go through `/api` which Vite proxies to `http://localhost:5000`.
-
 ---
 
-## Local Installation
-
-### Prerequisites
-
-- **Node.js** v18+ (tested on v24)
-- **PostgreSQL** 14+ (optional — the app falls back to an embedded PGlite engine if no Postgres server is available)
-
-### 1. Clone and install dependencies
+## 8. Installation
 
 ```bash
 # Install backend dependencies
@@ -123,248 +125,95 @@ cd ../frontend
 npm install
 ```
 
-### 2. Configure environment
-
-```bash
-cd backend
-cp .env.example .env
-# Edit .env if you have a local PostgreSQL server to connect to
-```
-
-### 3. Database Setup
-
-**Option A — with local PostgreSQL:**
-```bash
-# Create the database
-psql -U postgres -c "CREATE DATABASE minierp_crm;"
-
-# Run migrations
-psql -U postgres -d minierp_crm -f src/db/schema.sql
-
-# Seed demo data
-npm run db:seed
-```
-
-**Option B — without PostgreSQL (uses embedded engine):**
-
-No setup needed. The server auto-detects that no PostgreSQL is running, initializes the embedded PGlite engine, runs the schema, and seeds demo data automatically on first startup.
-
 ---
 
-## How to Run
+## 9. Running Locally
 
-### Backend
+Start backend and frontend in separate terminals:
 
 ```bash
+# Terminal 1 - Backend (port 5000)
 cd backend
 npm run dev
-# Server starts on http://localhost:5000
-# Health check: http://localhost:5000/api/health
-```
 
-### Frontend
-
-```bash
+# Terminal 2 - Frontend (port 5173)
 cd frontend
 npm run dev
-# App starts on http://localhost:5173
 ```
 
-Both servers must be running simultaneously. The Vite dev server proxies all `/api` requests to the backend automatically.
+Open browser at `http://localhost:5173`.
 
 ---
 
-## Test Login Credentials
+## 10. Test Credentials
 
-All accounts use the same password for demo purposes.
-
-| Role      | Email                    | Password      | Access Level                         |
-|-----------|--------------------------|---------------|--------------------------------------|
-| Admin     | admin@example.com        | `password123` | Full access to all modules           |
-| Sales     | sales@example.com        | `password123` | Customers, CRM, Challans, Products   |
-| Warehouse | warehouse@example.com    | `password123` | Products, Stock Movements, Challans  |
-| Accounts  | accounts@example.com     | `password123` | Customers, Challans (read), Products |
+| Role | Email | Password | Allowed Access |
+|---|---|---|---|
+| Admin | admin@example.com | `password123` | Full system access |
+| Sales | sales@example.com | `password123` | Customers, CRM, Challans, Products |
+| Warehouse | warehouse@example.com | `password123` | Products, Stock Movements, Challan view/confirm |
+| Accounts | accounts@example.com | `password123` | Read-only view of Customers, Products, Challans |
 
 ---
 
-## Role-Based Access (RBAC)
-
-Authorization is enforced on both the **API** (middleware) and the **frontend** (route guards, hidden buttons). Backend enforcement is the source of truth — frontend restrictions are UI convenience only.
-
-| Action                     | Admin | Sales | Warehouse | Accounts |
-|----------------------------|-------|-------|-----------|----------|
-| View Customers             | ✅    | ✅    | ❌        | ✅       |
-| Create/Edit Customers      | ✅    | ✅    | ❌        | ❌       |
-| Delete Customers           | ✅    | ❌    | ❌        | ❌       |
-| Add CRM Follow-up          | ✅    | ✅    | ❌        | ❌       |
-| View Products              | ✅    | ✅    | ✅        | ✅       |
-| Create/Edit Products       | ✅    | ❌    | ✅        | ❌       |
-| Record Stock Movement      | ✅    | ❌    | ✅        | ❌       |
-| Create Challan             | ✅    | ✅    | ❌        | ❌       |
-| Confirm Challan            | ✅    | ✅    | ✅        | ❌       |
-| Cancel Challan             | ✅    | ✅    | ❌        | ❌       |
-| User Management            | ✅    | ❌    | ❌        | ❌       |
-
----
-
-## API Documentation
+## 11. API Documentation
 
 Base URL: `http://localhost:5000/api`
 
-All protected routes require `Authorization: Bearer <token>` header.
+### Auth
+- `POST /api/auth/login` - Authenticate & obtain JWT
+- `GET /api/auth/me` - Get logged-in user profile
+- `GET /api/auth/users` - Admin: List system users
 
-### Authentication
+### Customers CRM
+- `GET /api/customers` - List customers (`?search=`, `?status=`, `?type=`, `?page=`)
+- `GET /api/customers/:id` - Get customer details
+- `POST /api/customers` - Create new customer
+- `PUT /api/customers/:id` - Update customer
+- `DELETE /api/customers/:id` - Admin: Delete customer
+- `POST /api/customers/:id/followups` - Log CRM follow-up note
+- `GET /api/customers/:id/followups` - View customer follow-up history
 
-| Method | Endpoint         | Body / Notes              |
-|--------|------------------|---------------------------|
-| POST   | `/auth/login`    | `{ email, password }`     |
-| GET    | `/auth/me`       | Returns current user info |
-| GET    | `/auth/users`    | Admin only — all users    |
-
-### Customers
-
-| Method | Endpoint                           | Notes                          |
-|--------|------------------------------------|--------------------------------|
-| GET    | `/customers`                       | `?search=&status=&type=&page=` |
-| GET    | `/customers/:id`                   | Single customer profile        |
-| POST   | `/customers`                       | Create customer                |
-| PUT    | `/customers/:id`                   | Update customer                |
-| DELETE | `/customers/:id`                   | Admin only                     |
-| POST   | `/customers/:id/followups`         | Add CRM follow-up note         |
-| GET    | `/customers/:id/followups`         | CRM follow-up timeline         |
-
-### Products
-
-| Method | Endpoint                                 | Notes                          |
-|--------|------------------------------------------|--------------------------------|
-| GET    | `/products`                              | `?search=&category=&lowStock=` |
-| GET    | `/products/:id`                          | Single product                 |
-| POST   | `/products`                              | Create product                 |
-| PUT    | `/products/:id`                          | Update product                 |
-| POST   | `/products/:id/stock-movement`           | Manual IN or OUT adjustment    |
-| GET    | `/products/:id/stock-movements`          | Product stock history          |
-
-### Stock Movements (Global)
-
-| Method | Endpoint             | Notes                                      |
-|--------|----------------------|--------------------------------------------|
-| GET    | `/stock-movements`   | `?product_id=&movement_type=&page=`        |
+### Products & Inventory
+- `GET /api/products` - List products (`?search=`, `?category=`, `?lowStock=true`)
+- `GET /api/products/:id` - Get product details
+- `POST /api/products` - Create product
+- `PUT /api/products/:id` - Update product
+- `POST /api/products/:id/stock-movement` - Record manual IN/OUT stock movement
+- `GET /api/products/:id/stock-movements` - View product movement history
+- `GET /api/stock-movements` - Global stock audit log
 
 ### Sales Challans
-
-| Method | Endpoint                     | Notes                                         |
-|--------|------------------------------|-----------------------------------------------|
-| GET    | `/challans`                  | `?search=&status=&customer_id=&page=`         |
-| GET    | `/challans/:id`              | Full challan with items                       |
-| POST   | `/challans`                  | Create Draft (or confirm immediately)         |
-| POST   | `/challans/:id/confirm`      | Confirm + deduct stock in DB transaction      |
-| POST   | `/challans/:id/cancel`       | Cancel (only Draft challans)                  |
+- `GET /api/challans` - List sales challans (`?search=`, `?status=`, `?page=`)
+- `GET /api/challans/:id` - Get challan details & line items
+- `POST /api/challans` - Create Draft challan (or confirm immediately)
+- `POST /api/challans/:id/confirm` - Confirm challan & deduct stock in DB transaction
+- `POST /api/challans/:id/cancel` - Cancel Draft challan
 
 ### Dashboard
-
-| Method | Endpoint              | Notes                               |
-|--------|-----------------------|-------------------------------------|
-| GET    | `/dashboard/stats`    | Real metrics from DB                |
-
-### HTTP Status Codes Used
-
-| Code | Meaning                                     |
-|------|---------------------------------------------|
-| 200  | Success (GET, PUT, POST confirm/cancel)     |
-| 201  | Created (POST create)                       |
-| 400  | Bad Request (insufficient stock, already confirmed, wrong state) |
-| 401  | Unauthorized (missing/invalid token)        |
-| 403  | Forbidden (wrong role)                      |
-| 404  | Not Found                                   |
-| 409  | Conflict (duplicate email, duplicate SKU)   |
-| 422  | Validation Error (Zod schema failure)       |
-| 500  | Server Error                                |
+- `GET /api/dashboard/stats` - Summary metrics (totals, low stock alerts, recent activity)
 
 ---
 
-## Sales Challan Business Logic
+## 12. Deployment
 
-The challan confirmation is the most critical operation. It executes inside a **PostgreSQL transaction**:
-
-1. Lock the challan row (`SELECT ... FOR UPDATE`)
-2. If already `Confirmed` → return 400 (prevents double deduction)
-3. If `Cancelled` → return 400
-4. For each challan item, lock the product row (`SELECT ... FOR UPDATE`)
-5. If `item.quantity > product.current_stock` → return 400 with exact error: *"Insufficient stock for SKU {sku}. Available: {n}, Requested: {m}."*
-6. Deduct stock from all products
-7. Insert `OUT` stock movement records for each item
-8. Set challan status to `Confirmed` with `confirmed_at = NOW()`
-9. If any step fails → `ROLLBACK` — no partial updates
-
-Challan items store a **snapshot** of product name, SKU, and unit price at the time of challan creation. Editing the product catalog later does not affect historical challans.
+1. **Database**: Provision PostgreSQL database (Supabase, Neon, Render Postgres). Run `schema.sql`.
+2. **Backend**: Deploy to Node.js host (Render, Railway, Fly.io). Set environment variables (`DATABASE_URL`, `JWT_SECRET`, `CLIENT_URL`).
+3. **Frontend**: Build dist assets with `npm run build`. Deploy to static host (Vercel, Netlify).
 
 ---
 
-## Postman Collection
+## 13. Assumptions
 
-Import `postman_collection.json` into Postman. The collection covers:
-
-- Admin login
-- Customer CRUD
-- CRM follow-up logging
-- Product creation
-- Manual stock adjustment
-- Draft challan creation
-- Challan confirmation
-- Insufficient stock error case (returns 400)
-
-Set `authToken` collection variable after a successful login.
+- Customer GST number is optional
+- Confirmed challans cannot be cancelled or modified
+- Stock deduction occurs strictly upon challan confirmation
+- Product details on created challans are locked snapshot records
 
 ---
 
-## Deployment
+## 14. Known Limitations
 
-### Frontend → Vercel / Netlify
-
-```bash
-cd frontend
-npm run build
-# Deploy the `dist/` folder
-```
-
-Set environment variable `VITE_API_BASE_URL=https://your-backend.onrender.com/api`
-
-Update `vite.config.ts` to use `VITE_API_BASE_URL` for production (currently uses Vite proxy for local dev).
-
-### Backend → Render / Railway / Fly.io
-
-Set these environment variables in your deployment platform:
-
-```
-PORT=10000
-NODE_ENV=production
-DATABASE_URL=postgres://...your-production-db-url...
-JWT_SECRET=your-strong-random-secret
-CLIENT_URL=https://your-frontend-url.vercel.app
-```
-
-### Database → Neon / Supabase / Render PostgreSQL
-
-1. Create a PostgreSQL database
-2. Run `backend/src/db/schema.sql` to create tables
-3. Run `npm run db:seed` with `DATABASE_URL` pointing to the production database
-
----
-
-## Assumptions
-
-- GST number is optional for customers (not all customers are GST-registered)
-- Only Draft challans can be confirmed or cancelled; Confirmed challans are immutable
-- Stock movements from challan confirmations are automatically created — only manual adjustments need the warehouse user to input a reason
-- No soft-delete; customer deletion is a hard delete (Admin only)
-- The embedded PGlite engine stores data in `backend/.pgdata/` — this persists across server restarts on the same machine
-
----
-
-## Known Limitations
-
-- No PDF challan export (planned as future enhancement)
-- No email notification system for follow-up reminders
-- No user creation/editing in the UI (users are seeded — extend via database or API)
-- PGlite is single-process only; for production, use a real PostgreSQL server
-- No file attachment support for customer follow-ups
+- PDF download/export is not included in current scope
+- Automated email notifications are not configured
+- User management is read-only in UI (users created via database/seed)

@@ -11,11 +11,10 @@ async function seedIfEmpty() {
   const usersResult = await db.query('SELECT COUNT(*) as count FROM users');
   const count = parseInt(usersResult.rows[0].count, 10);
   if (count > 0) {
-    console.log(`Database already contains ${count} user(s). Skipping seed.`);
     return;
   }
 
-  console.log('Empty database detected. Running auto-seed...');
+  console.log('Database empty. Bootstrapping initial records...');
   const pw = await hashPassword('password123');
 
   const users = [
@@ -36,6 +35,10 @@ async function seedIfEmpty() {
     { id: 'c-002', customer_name: 'Anita Desai', mobile_number: '+91 9822011223', email: 'anita@metrotraders.in', business_name: 'Metro Wholesale Traders', gst_number: '07ABBCB2201Q1ZO', customer_type: 'Wholesale', address: 'B-12 Commercial Complex, Laxmi Nagar, Delhi, DL', status: 'Active', follow_up_date: new Date(Date.now() + 86400000 * 7).toISOString(), notes: 'Interested in bulk electronic components.' },
     { id: 'c-003', customer_name: 'Vikram Mehta', mobile_number: '+91 9711223344', email: 'vikram@sunrisestores.com', business_name: 'Sunrise Retail Hardware', gst_number: '29AABCS3312R1Z8', customer_type: 'Retail', address: 'Shop 104, Main Market, Indiranagar, Bengaluru, KA', status: 'Lead', follow_up_date: new Date(Date.now() + 86400000).toISOString(), notes: 'Sent initial pricing catalog.' },
     { id: 'c-004', customer_name: 'Priya Sharma', mobile_number: '+91 9988776655', email: 'priya@globaltraders.org', business_name: 'Global Trade Corp', gst_number: '19AAACG4411S1Z5', customer_type: 'Wholesale', address: '55 Park Street, Kolkata, WB', status: 'Inactive', follow_up_date: null, notes: 'Account inactive since last FY.' },
+    { id: 'c-005', customer_name: 'Suresh Patel', mobile_number: '+91 9833445566', email: 'suresh@patelelectricals.com', business_name: 'Patel Electrical Supplies', gst_number: '24AAACP5566R1Z2', customer_type: 'Distributor', address: 'GIDC Industrial Estate, Vadodara, GJ', status: 'Active', follow_up_date: new Date(Date.now() + 86400000 * 4).toISOString(), notes: 'Wholesale electrical wiring and switches buyer.' },
+    { id: 'c-006', customer_name: 'Karan Malhotra', mobile_number: '+91 9811224455', email: 'karan@malhotrahardware.in', business_name: 'Malhotra Hardware Mart', gst_number: '03AAACM1122S1Z9', customer_type: 'Wholesale', address: 'GT Road, Ludhiana, PB', status: 'Active', follow_up_date: new Date(Date.now() + 86400000 * 5).toISOString(), notes: 'Regular order cycle every 15 days.' },
+    { id: 'c-007', customer_name: 'Rohan Joshi', mobile_number: '+91 9766554433', email: 'rohan@joshisafety.com', business_name: 'Joshi Safety Equipment', gst_number: '27AAACJ9988T1Z4', customer_type: 'Distributor', address: 'MIDC Ambad, Nashik, MH', status: 'Lead', follow_up_date: new Date(Date.now() + 86400000 * 2).toISOString(), notes: 'Quotes sent for safety helmets and gloves.' },
+    { id: 'c-008', customer_name: 'Sunil Verma', mobile_number: '+91 9877665544', email: 'sunil@vermapackaging.co.in', business_name: 'Verma Industrial Packaging', gst_number: '09AAACV3344U1Z1', customer_type: 'Wholesale', address: 'Transport Nagar, Kanpur, UP', status: 'Active', follow_up_date: new Date(Date.now() + 86400000 * 6).toISOString(), notes: 'Heavy duty stretch film and tape orders.' },
   ];
   for (const c of customers) {
     await db.query(
@@ -50,6 +53,11 @@ async function seedIfEmpty() {
     { id: 'p-003', product_name: 'Stainless Steel Fastener Kit (1000 Pcs)', sku: 'FAS-SSK-1000', category: 'Hardware', unit_price: 1850, current_stock: 4, min_stock_alert: 15, location: 'Aisle 5 - Shelf C' },
     { id: 'p-004', product_name: 'Digital Multimeter Pro 1000V', sku: 'ELE-MLT-1000', category: 'Electronics', unit_price: 2100, current_stock: 3, min_stock_alert: 10, location: 'Aisle 2 - Cabinet 4' },
     { id: 'p-005', product_name: 'Hydraulic Floor Jack 3 Ton', sku: 'HYD-JCK-3TN', category: 'Heavy Equipment', unit_price: 8900, current_stock: 18, min_stock_alert: 5, location: 'Zone C - Pallet 12' },
+    { id: 'p-006', product_name: 'Industrial LED Floodlight 100W IP65', sku: 'ELE-FLD-100W', category: 'Electronics', unit_price: 1450, current_stock: 60, min_stock_alert: 15, location: 'Aisle 2 - Shelf D' },
+    { id: 'p-007', product_name: 'Cut-Resistant Safety Work Gloves (Pair)', sku: 'SAF-GLV-CUT', category: 'Safety Equipment', unit_price: 240, current_stock: 300, min_stock_alert: 50, location: 'Aisle 1 - Shelf C' },
+    { id: 'p-008', product_name: 'Heavy Duty Stretch Wrap Film 500mm', sku: 'PKG-STW-500', category: 'Packaging', unit_price: 480, current_stock: 85, min_stock_alert: 20, location: 'Zone B - Shelf A' },
+    { id: 'p-009', product_name: 'Pneumatic Impact Wrench 1/2 Inch', sku: 'PWR-WRC-050', category: 'Power Tools', unit_price: 5200, current_stock: 8, min_stock_alert: 10, location: 'Aisle 3 - Shelf D' },
+    { id: 'p-010', product_name: 'Copper Armored Cable 3-Core (100m Roll)', sku: 'ELE-CBL-100M', category: 'Electronics', unit_price: 12500, current_stock: 12, min_stock_alert: 5, location: 'Zone A - Rack 2' },
   ];
   for (const p of products) {
     await db.query(
@@ -63,6 +71,8 @@ async function seedIfEmpty() {
     { id: 'sm-002', product_id: 'p-002', quantity_changed: 150, movement_type: 'IN', reason: 'Initial Vendor Shipment Batch #882', created_by: 'u-wh-01' },
     { id: 'sm-003', product_id: 'p-003', quantity_changed: 20, movement_type: 'IN', reason: 'Initial Stock Receiving', created_by: 'u-wh-01' },
     { id: 'sm-004', product_id: 'p-003', quantity_changed: 16, movement_type: 'OUT', reason: 'Sales Challan Confirmation #CH-2026-0001', created_by: 'u-sales-01' },
+    { id: 'sm-005', product_id: 'p-006', quantity_changed: 70, movement_type: 'IN', reason: 'Factory Stock Receiving', created_by: 'u-wh-01' },
+    { id: 'sm-006', product_id: 'p-008', quantity_changed: 100, movement_type: 'IN', reason: 'Supplier Delivery Note #4421', created_by: 'u-wh-01' },
   ];
   for (const sm of movements) {
     await db.query(
@@ -96,8 +106,6 @@ async function seedIfEmpty() {
     `INSERT INTO challan_items (id, challan_id, product_id, product_name, sku, unit_price, quantity, line_total) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT (id) DO NOTHING`,
     ['chi-003', 'ch-002', 'p-002', 'Industrial Safety Helmet - High Vis Yellow', 'SAF-HLM-YEL', 620, 10, 6200]
   );
-
-  console.log('Auto-seed completed successfully.');
 }
 
 async function startServer() {
@@ -107,10 +115,7 @@ async function startServer() {
     await seedIfEmpty();
 
     app.listen(PORT, () => {
-      console.log(`====================================================`);
-      console.log(`Mini ERP + CRM Server running on port ${PORT}`);
-      console.log(`Health Check: http://localhost:${PORT}/api/health`);
-      console.log(`====================================================`);
+      console.log(`Server running on port ${PORT}`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);

@@ -24,13 +24,8 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Health Check API
 app.get('/api/health', (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    message: 'Mini ERP + CRM API Server is operating normally.',
-    timestamp: new Date().toISOString(),
-  });
+  res.status(200).json({ status: 'success', message: 'API status: OK' });
 });
 
 // API Routes
