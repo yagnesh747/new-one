@@ -84,7 +84,7 @@ export const CustomerDetail: React.FC = () => {
     <div className="page-container">
       <div style={{ marginBottom: 16 }}>
         <Link to="/customers" className="btn btn-secondary btn-sm">
-          <ArrowLeft size={14} /> Back to Customers Directory
+          <ArrowLeft size={14} /> Back to Customer CRM
         </Link>
       </div>
 

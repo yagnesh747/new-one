@@ -126,12 +126,11 @@ export const Customers: React.FC = () => {
     <div className="page-container">
       <div className="page-header">
         <div className="page-header-text">
-          <h1>Customer CRM Directory</h1>
-          <p>Manage wholesale buyers, retail leads, distributors, and CRM follow-up schedules</p>
+          <h1>Customer CRM</h1>
         </div>
         {canEdit && (
           <button className="btn btn-primary" onClick={handleOpenCreate}>
-            <Plus size={16} /> Add New Customer
+            <Plus size={16} /> Add Customer
           </button>
         )}
       </div>

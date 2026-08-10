@@ -48,12 +48,11 @@ export const Challans: React.FC = () => {
     <div className="page-container">
       <div className="page-header">
         <div className="page-header-text">
-          <h1>Sales Challans Workflow</h1>
-          <p>Generate, confirm, and audit sales dispatch challans with stock deduction safeguards</p>
+          <h1>Sales Challan</h1>
         </div>
         {canCreate && (
           <Link to="/challans/new" className="btn btn-primary">
-            <Plus size={16} /> Create New Challan
+            <Plus size={16} /> Create Challan
           </Link>
         )}
       </div>

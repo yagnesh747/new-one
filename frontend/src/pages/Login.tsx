@@ -39,9 +39,7 @@ export const Login: React.FC = () => {
     <div className="login-container">
       <div className="login-card">
         <div className="login-logo">
-          <Boxes size={36} style={{ color: '#2563eb', marginBottom: '8px' }} />
-          <h2>ERP + CRM Portal</h2>
-          <p>Wholesale & Distribution Operations System</p>
+          <h2>Mini ERP + CRM Operations Portal</h2>
         </div>
 
         {error && (

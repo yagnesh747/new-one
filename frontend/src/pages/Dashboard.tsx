@@ -16,7 +16,7 @@ export const Dashboard: React.FC = () => {
         const res = await dashboardApi.getStats();
         setStats(res.data);
       } catch (err: any) {
-        setError(err.message || 'Failed to load dashboard metrics');
+        setError(err.message || 'Failed to load dashboard statistics');
       } finally {
         setLoading(false);
       }
@@ -26,7 +26,7 @@ export const Dashboard: React.FC = () => {
   }, []);
 
   if (loading) {
-    return <div className="page-container">Loading operational dashboard metrics...</div>;
+    return <div className="page-container">Loading...</div>;
   }
 
   if (error || !stats) {
@@ -42,15 +42,14 @@ export const Dashboard: React.FC = () => {
       <div className="page-header">
         <div className="page-header-text">
           <h1>Dashboard</h1>
-          <p>Overview of customers, inventory and sales challans</p>
         </div>
       </div>
 
-      {/* Real Metric Cards Grid */}
+      {/* Summary Cards Grid */}
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
           gap: '16px',
           marginBottom: '24px',
         }}
@@ -62,8 +61,8 @@ export const Dashboard: React.FC = () => {
               <div style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', marginTop: '4px' }}>
                 {stats.customers.total}
               </div>
-              <div style={{ fontSize: '12px', color: '#16a34a', marginTop: '4px' }}>
-                {stats.customers.active} Active accounts
+              <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
+                {stats.customers.active} Active
               </div>
             </div>
             <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#eff6ff', color: '#2563eb' }}>
@@ -75,12 +74,12 @@ export const Dashboard: React.FC = () => {
         <div className="card" style={{ marginBottom: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>PRODUCT INVENTORY</div>
+              <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>TOTAL PRODUCTS</div>
               <div style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', marginTop: '4px' }}>
                 {stats.products.total}
               </div>
-              <div style={{ fontSize: '12px', color: stats.products.lowStockCount > 0 ? '#dc2626' : '#16a34a', marginTop: '4px' }}>
-                {stats.products.lowStockCount} Low stock alerts
+              <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
+                Catalog items
               </div>
             </div>
             <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#fef3c7', color: '#d97706' }}>
@@ -92,16 +91,16 @@ export const Dashboard: React.FC = () => {
         <div className="card" style={{ marginBottom: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>CONFIRMED REVENUE</div>
-              <div style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', marginTop: '4px' }}>
-                ₹{stats.challans.totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+              <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>LOW STOCK PRODUCTS</div>
+              <div style={{ fontSize: '24px', fontWeight: 700, color: stats.products.lowStockCount > 0 ? '#dc2626' : '#0f172a', marginTop: '4px' }}>
+                {stats.products.lowStockCount}
               </div>
               <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
-                From {stats.challans.confirmed} confirmed challans
+                At or below alert level
               </div>
             </div>
-            <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#f0fdf4', color: '#16a34a' }}>
-              <FileText size={24} />
+            <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#fee2e2', color: '#dc2626' }}>
+              <AlertTriangle size={24} />
             </div>
           </div>
         </div>
@@ -114,7 +113,7 @@ export const Dashboard: React.FC = () => {
                 {stats.challans.total}
               </div>
               <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
-                Drafts & Dispatched
+                {stats.challans.confirmed} Confirmed
               </div>
             </div>
             <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#f0f9ff', color: '#0284c7' }}>
@@ -130,10 +129,10 @@ export const Dashboard: React.FC = () => {
           <div className="card-title" style={{ color: '#dc2626' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <AlertTriangle size={18} />
-              Low Stock Warning (Requires Reorder)
+              Low Stock Alert
             </span>
             <Link to="/products?lowStock=true" className="btn btn-secondary btn-sm">
-              View All Low Stock
+              View Products
             </Link>
           </div>
           <div className="table-responsive">
@@ -175,9 +174,6 @@ export const Dashboard: React.FC = () => {
         <div className="card">
           <div className="card-title">
             <span>Recent Stock Movements</span>
-            <Link to="/inventory" className="btn btn-secondary btn-sm">
-              View All
-            </Link>
           </div>
           <div className="table-responsive">
             <table className="table">
@@ -193,7 +189,7 @@ export const Dashboard: React.FC = () => {
                 {stats.recentMovements.length === 0 ? (
                   <tr>
                     <td colSpan={4} style={{ textAlign: 'center', color: '#64748b' }}>
-                      No stock movements recorded yet.
+                      No stock movements.
                     </td>
                   </tr>
                 ) : (
@@ -240,7 +236,7 @@ export const Dashboard: React.FC = () => {
                 <tr>
                   <th>Challan No</th>
                   <th>Customer</th>
-                  <th>Amount</th>
+                  <th>Total Qty</th>
                   <th>Status</th>
                 </tr>
               </thead>
@@ -248,7 +244,7 @@ export const Dashboard: React.FC = () => {
                 {stats.recentChallans.length === 0 ? (
                   <tr>
                     <td colSpan={4} style={{ textAlign: 'center', color: '#64748b' }}>
-                      No challans generated yet.
+                      No challans generated.
                     </td>
                   </tr>
                 ) : (
@@ -261,7 +257,7 @@ export const Dashboard: React.FC = () => {
                         <div style={{ fontWeight: 600 }}>{ch.customer_name}</div>
                         <div style={{ fontSize: '11px', color: '#64748b' }}>{ch.business_name}</div>
                       </td>
-                      <td className="mono">₹{ch.total_amount.toFixed(2)}</td>
+                      <td className="mono">{ch.total_quantity}</td>
                       <td>
                         <StatusBadge status={ch.status} />
                       </td>

@@ -5,9 +5,9 @@ import {
   LayoutDashboard,
   Users,
   Package,
-  Boxes,
   FileText,
   UserCheck,
+  Boxes,
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
@@ -19,7 +19,6 @@ export const Sidebar: React.FC = () => {
 
   const showCustomers = ['Admin', 'Sales', 'Accounts'].includes(role);
   const showProducts = ['Admin', 'Sales', 'Warehouse', 'Accounts'].includes(role);
-  const showInventory = ['Admin', 'Warehouse'].includes(role);
   const showChallans = ['Admin', 'Sales', 'Warehouse', 'Accounts'].includes(role);
   const showUsers = role === 'Admin';
 
@@ -28,9 +27,9 @@ export const Sidebar: React.FC = () => {
       <div className="sidebar-header">
         <div className="sidebar-brand">
           <Boxes size={22} className="text-primary" />
-          <span>PORTAL ERP</span>
+          <span>Mini ERP + CRM</span>
         </div>
-        <div className="sidebar-subtitle">Wholesale & Operations</div>
+        <div className="sidebar-subtitle">Operations Portal</div>
       </div>
 
       <nav className="sidebar-nav">
@@ -48,7 +47,7 @@ export const Sidebar: React.FC = () => {
             className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
           >
             <Users size={18} />
-            <span>Customers CRM</span>
+            <span>Customer CRM</span>
           </NavLink>
         )}
 
@@ -58,17 +57,7 @@ export const Sidebar: React.FC = () => {
             className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
           >
             <Package size={18} />
-            <span>Products</span>
-          </NavLink>
-        )}
-
-        {showInventory && (
-          <NavLink
-            to="/inventory"
-            className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
-          >
-            <Boxes size={18} />
-            <span>Inventory Movements</span>
+            <span>Product and Inventory</span>
           </NavLink>
         )}
 
@@ -78,7 +67,7 @@ export const Sidebar: React.FC = () => {
             className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
           >
             <FileText size={18} />
-            <span>Sales Challans</span>
+            <span>Sales Challan</span>
           </NavLink>
         )}
 
@@ -88,7 +77,7 @@ export const Sidebar: React.FC = () => {
             className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
           >
             <UserCheck size={18} />
-            <span>User Management</span>
+            <span>Users</span>
           </NavLink>
         )}
       </nav>

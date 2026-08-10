@@ -106,14 +106,18 @@ export const Products: React.FC = () => {
     <div className="page-container">
       <div className="page-header">
         <div className="page-header-text">
-          <h1>Product Catalog & Stock Status</h1>
-          <p>Manage product SKUs, pricing, minimum stock alerts, and warehouse rack locations</p>
+          <h1>Product and Inventory</h1>
         </div>
-        {canEdit && (
-          <button className="btn btn-primary" onClick={handleOpenCreate}>
-            <Plus size={16} /> Add New Product
-          </button>
-        )}
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <Link to="/inventory" className="btn btn-secondary">
+            <Boxes size={16} /> Stock Movement Log
+          </Link>
+          {canEdit && (
+            <button className="btn btn-primary" onClick={handleOpenCreate}>
+              <Plus size={16} /> Add Product
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Toolbar & Filters */}

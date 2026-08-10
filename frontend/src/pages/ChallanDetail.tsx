@@ -125,10 +125,7 @@ export const ChallanDetail: React.FC = () => {
         {/* Document Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #0f172a', paddingBottom: '20px', marginBottom: '24px' }}>
           <div>
-            <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>WHOLESALE DELIVERY CHALLAN</h2>
-            <div style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>
-              Official Inventory Dispatch Document
-            </div>
+            <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>SALES CHALLAN</h2>
           </div>
           <div style={{ textAlign: 'right' }}>
             <div className="mono font-bold" style={{ fontSize: '20px', color: '#2563eb' }}>

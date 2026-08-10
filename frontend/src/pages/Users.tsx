@@ -27,8 +27,7 @@ export const UsersPage: React.FC = () => {
     <div className="page-container">
       <div className="page-header">
         <div className="page-header-text">
-          <h1>System User & Role Management</h1>
-          <p>Admin overview of operational user accounts and RBAC role assignments</p>
+          <h1>Authentication and Roles</h1>
         </div>
       </div>
 

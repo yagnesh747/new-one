@@ -11,7 +11,7 @@ export const TopHeader: React.FC = () => {
 
   return (
     <header className="top-header">
-      <div className="header-title">ERP + CRM Operations Portal</div>
+      <div className="header-title">Mini ERP + CRM Operations Portal</div>
 
       <div className="header-user">
         <div className="user-badge">

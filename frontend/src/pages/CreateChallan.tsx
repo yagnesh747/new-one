@@ -128,8 +128,7 @@ export const CreateChallan: React.FC = () => {
 
       <div className="page-header">
         <div className="page-header-text">
-          <h1>Create New Sales Challan</h1>
-          <p>Generate a new wholesale sales challan with snapshot product pricing and stock verification</p>
+          <h1>Create Sales Challan</h1>
         </div>
       </div>
 

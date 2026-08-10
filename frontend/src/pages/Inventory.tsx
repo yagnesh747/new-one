@@ -112,12 +112,11 @@ export const Inventory: React.FC = () => {
     <div className="page-container">
       <div className="page-header">
         <div className="page-header-text">
-          <h1>Stock Movements & Audit History</h1>
-          <p>Complete ledger of inventory stock entries, warehouse dispatches, and manual adjustments</p>
+          <h1>Stock Movement Log</h1>
         </div>
         {canAdjust && (
           <button className="btn btn-primary" onClick={handleOpenModal}>
-            <Plus size={16} /> Record Stock Adjustment (IN/OUT)
+            <Plus size={16} /> Record Stock Movement
           </button>
         )}
       </div>
