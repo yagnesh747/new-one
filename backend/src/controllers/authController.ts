@@ -38,4 +38,17 @@ export class AuthController {
       next(error);
     }
   }
+
+  static async register(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { email, password, full_name, role } = req.body;
+      const result = await AuthService.register({ email, password, full_name, role });
+      res.status(201).json({
+        status: 'success',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

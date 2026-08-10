@@ -8,6 +8,7 @@ import { loginSchema } from '../validators/auth.validator';
 const router = Router();
 
 router.post('/login', validate(loginSchema), AuthController.login);
+router.post('/register', AuthController.register);
 router.get('/me', authenticate, AuthController.me);
 router.get('/users', authenticate, authorize(['Admin']), AuthController.getUsers);
 

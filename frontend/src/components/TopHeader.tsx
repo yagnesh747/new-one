@@ -11,7 +11,7 @@ export const TopHeader: React.FC = () => {
 
   return (
     <header className="top-header">
-      <div className="header-title">Mini ERP + CRM Operations Portal</div>
+      <div className="header-title">Stockly</div>
 
       <div className="header-user">
         <div className="user-badge">
@@ -25,7 +25,7 @@ export const TopHeader: React.FC = () => {
         <button
           onClick={logout}
           className="btn btn-secondary btn-sm"
-          title="Sign out of Operations Portal"
+          title="Sign out of Stockly"
         >
           <LogOut size={14} />
           <span>Logout</span>

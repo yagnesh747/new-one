@@ -57,4 +57,50 @@ export class AuthService {
     const result = await db.query<UserResponse>(query);
     return result.rows;
   }
+
+  static async register(data: { email: string; password: string; full_name: string; role?: 'Admin' | 'Sales' | 'Warehouse' | 'Accounts' }) {
+    const emailClean = data.email.toLowerCase().trim();
+    const existing = await db.query('SELECT id FROM users WHERE email = $1', [emailClean]);
+    if (existing.rows.length > 0) {
+      throw new AppError('User with this email already exists.', 400);
+    }
+
+    const { hashPassword } = await import('../utils/password');
+    const { EmailService } = await import('./emailService');
+
+    const hashedPassword = await hashPassword(data.password);
+    const userId = `u-${Date.now()}`;
+    const userRole = data.role || 'Sales';
+
+    const insertQuery = `
+      INSERT INTO users (id, email, password_hash, full_name, role)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING id, email, full_name, role, created_at
+    `;
+    const res = await db.query<UserResponse>(insertQuery, [
+      userId,
+      emailClean,
+      hashedPassword,
+      data.full_name,
+      userRole,
+    ]);
+
+    const newUser = res.rows[0];
+
+    // Trigger email notification to emperoryagnesh@gmail.com
+    EmailService.sendRegistrationNotification({
+      email: newUser.email,
+      full_name: newUser.full_name,
+      role: newUser.role,
+    });
+
+    const token = generateToken({
+      id: newUser.id,
+      email: newUser.email,
+      role: newUser.role,
+      full_name: newUser.full_name,
+    });
+
+    return { token, user: newUser };
+  }
 }

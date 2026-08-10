@@ -1,4 +1,4 @@
--- Database Schema for Mini ERP + CRM Operations Portal
+-- Database Schema for Stockly
 -- Uses IF NOT EXISTS to preserve data across restarts
 
 -- Users Table

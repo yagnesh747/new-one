@@ -27,9 +27,8 @@ export const Sidebar: React.FC = () => {
       <div className="sidebar-header">
         <div className="sidebar-brand">
           <Boxes size={22} className="text-primary" />
-          <span>Mini ERP + CRM</span>
+          <span>Stockly</span>
         </div>
-        <div className="sidebar-subtitle">Operations Portal</div>
       </div>
 
       <nav className="sidebar-nav">

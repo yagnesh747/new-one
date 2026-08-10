@@ -112,7 +112,6 @@ export interface DashboardStats {
   challans: {
     total: number;
     confirmed: number;
-    totalRevenue: number;
   };
   recentMovements: StockMovement[];
   recentChallans: Challan[];

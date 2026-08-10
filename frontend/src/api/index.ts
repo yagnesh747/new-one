@@ -13,6 +13,8 @@ import {
 export const authApi = {
   login: (email: string, password: string): Promise<ApiResponse<{ token: string; user: User }>> =>
     api.post('/auth/login', { email, password }),
+  register: (data: { email: string; password: string; full_name: string; role?: string }): Promise<ApiResponse<{ token: string; user: User }>> =>
+    api.post('/auth/register', data),
   getMe: (): Promise<ApiResponse<User>> => api.get('/auth/me'),
   getUsers: (): Promise<ApiResponse<User[]>> => api.get('/auth/users'),
 };

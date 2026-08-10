@@ -18,12 +18,11 @@ export class DashboardService {
       FROM products
     `);
 
-    // Total Confirmed Challans Amount
+    // Total Challans & Confirmed
     const challanStats = await db.query(`
       SELECT 
         COUNT(*) as total_challans,
-        COUNT(CASE WHEN status = 'Confirmed' THEN 1 END) as confirmed_challans,
-        COALESCE(SUM(CASE WHEN status = 'Confirmed' THEN total_amount ELSE 0 END), 0) as total_revenue
+        COUNT(CASE WHEN status = 'Confirmed' THEN 1 END) as confirmed_challans
       FROM challans
     `);
 
@@ -67,7 +66,6 @@ export class DashboardService {
       challans: {
         total: parseInt(challanStats.rows[0].total_challans, 10),
         confirmed: parseInt(challanStats.rows[0].confirmed_challans, 10),
-        totalRevenue: parseFloat(challanStats.rows[0].total_revenue),
       },
       recentMovements: recentMovements.rows,
       recentChallans: recentChallans.rows.map((c) => ({

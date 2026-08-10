@@ -1,81 +1,80 @@
-# Mini ERP + CRM Operations Portal
+# Stockly
 
-Full-stack internal operations portal for a wholesale/distribution business. Built with React, Node.js, Express, TypeScript, and PostgreSQL.
+Full-stack internal business application for wholesale/distribution operations. Built with React, Node.js, Express, TypeScript, and PostgreSQL.
 
 ---
 
 ## 1. Project Overview
 
-An internal operations tool for managing wholesale and distribution workflows across four key roles: **Admin**, **Sales**, **Warehouse**, and **Accounts**.
-
-Key modules:
-- **Customer CRM**: Lead management, customer directory, follow-up history
-- **Products & Inventory**: SKU catalog, stock levels, location tracking, low stock alerts
-- **Stock Movements**: IN/OUT audit log with movement reasons and user tracking
-- **Sales Challans**: Sales dispatch workflow with stock validation and atomic database transactions
+**Stockly** is an internal business application for managing wholesale and distribution workflows across four core modules:
+1. **Authentication and Roles**: Secure JWT authentication and Role-Based Access Control (Admin, Sales, Warehouse, Accounts). Automatic registration email alert to `emperoryagnesh@gmail.com`.
+2. **Customer CRM**: Lead management, customer directory, follow-up notes history.
+3. **Product and Inventory**: Catalog management, SKU tracking, warehouse location, min stock alerts, and `IN`/`OUT` stock movement audit log.
+4. **Sales Challan**: Challan creation (Draft/Confirmed), atomic stock deduction using database transactions, stock insufficiency guards, and immutable product snapshots.
 
 ---
 
 ## 2. Tech Stack
 
-- **Frontend**: React 19, TypeScript, Vite, React Router 7, Axios, Vanilla CSS
-- **Backend**: Node.js, TypeScript, Express.js, JWT, bcryptjs, Zod
-- **Database**: PostgreSQL (with embedded PGlite fallback for local dev)
+- **Frontend**: React 19, TypeScript, Vite, React Router 7, Lucide Icons, Vanilla CSS
+- **Backend**: Node.js, TypeScript, Express.js, JWT, bcryptjs, Zod, Nodemailer
+- **Database**: PostgreSQL (with embedded PGlite engine for zero-setup local dev)
 
 ---
 
-## 3. Features
+## 3. Key Business Logic & Features
 
-- **Role-Based Access Control**: Enforced on API routes and UI navigation (Admin, Sales, Warehouse, Accounts)
-- **CRM Follow-up System**: Track customer status, follow-up dates, and notes timeline
-- **Inventory Audit Log**: Record stock entries/dispatches with reason logging
-- **Atomic Challan Confirmation**: Locks product rows in a DB transaction, validates stock availability, deducts stock, and creates movement records
-- **Product Snapshot**: Challans store product name, SKU, and unit price at creation time
+- **Role-Based Access Control**: Strict access guards on API endpoints and UI navigation (Admin, Sales, Warehouse, Accounts).
+- **Email Registration Notification**: Automatically triggers an email notification to `emperoryagnesh@gmail.com` via Nodemailer whenever a new user registration occurs.
+- **CRM Follow-up System**: Track customer lead status (`Lead`, `Active`, `Inactive`), follow-up dates, and timestamped note entries.
+- **Inventory Audit Log**: Track stock entries (`IN`) and dispatches (`OUT`) with recorded quantity changes, reasons, timestamp, and user tracking.
+- **Atomic Challan Confirmation**: Executes a PostgreSQL transaction that locks product rows, checks stock availability, prevents negative stock, deducts stock atomically, and logs an `OUT` movement record.
+- **Product Snapshot**: Stores static product pricing and SKU snapshots at challan creation to preserve historical records even if catalog prices change.
 
 ---
 
 ## 4. Architecture
 
-Follows standard Controller-Service pattern:
-- **Controllers**: Handle HTTP request parsing, response formatting, and error forwarding
-- **Services**: Implement business logic, database queries, and transaction management
-- **Middleware**: JWT authentication, role guards, Zod validation, error handling
-- **Config**: Database pool initialization with auto-fallback to embedded PGlite
+Follows a clean Controller-Service architecture:
+- **Controllers**: Express route controllers for parsing requests, input validation, and HTTP responses.
+- **Services**: Pure business logic, PostgreSQL database transactions, stock deduction rules, and email dispatch.
+- **Middleware**: JWT authentication token verification, role-based authorization guards, Zod schema validation, and error handler.
+- **Config**: Database pool configuration with auto-fallback to embedded PGlite for rapid local testing.
 
 ---
 
 ## 5. Folder Structure
 
 ```
-full stack/
+stockly/
 ├── backend/
 │   ├── src/
-│   │   ├── config/         # Database configuration & initialization
-│   │   ├── controllers/    # Route controllers
-│   │   ├── db/             # PostgreSQL schema & seed script
-│   │   ├── middleware/     # Auth, RBAC, error handling, validation
-│   │   ├── models/         # TypeScript interfaces
-│   │   ├── routes/         # Express API routes
-│   │   ├── services/       # Database & business logic
-│   │   ├── utils/          # JWT, password hashing, error helpers
+│   │   ├── config/         # Database pool configuration & PGlite fallback
+│   │   ├── controllers/    # Express controllers
+│   │   ├── db/             # Schema SQL & seed script
+│   │   ├── middleware/     # Auth JWT, RBAC guards, error handler, Zod validation
+│   │   ├── models/         # TypeScript interfaces & types
+│   │   ├── routes/         # REST API routes
+│   │   ├── services/       # Core business services & email notification service
+│   │   ├── utils/          # JWT, bcrypt password hashing, AppError helpers
 │   │   ├── validators/     # Zod validation schemas
-│   │   ├── app.ts          # Express app configuration
-│   │   └── server.ts       # HTTP server entry point
+│   │   ├── app.ts          # Express application startup
+│   │   └── server.ts       # Server entry point
 │   ├── .env.example
 │   └── package.json
 ├── frontend/
 │   ├── src/
-│   │   ├── api/            # API client & request wrappers
-│   │   ├── components/     # Reusable UI components
-│   │   ├── context/        # Authentication state context
-│   │   ├── pages/          # Application views
-│   │   ├── styles/         # Global styles
-│   │   ├── types/          # Shared TypeScript interfaces
-│   │   ├── App.tsx         # Route configuration & layout
-│   │   └── main.tsx        # Application entry point
+│   │   ├── api/            # Axios HTTP client & endpoint modules
+│   │   ├── components/     # UI components (Header, Sidebar, Badges)
+│   │   ├── context/        # Auth state context
+│   │   ├── pages/          # Dashboard, Customer CRM, Inventory, Sales Challan pages
+│   │   ├── styles/         # Global clean CSS system
+│   │   ├── types/          # Shared TypeScript definitions
+│   │   ├── App.tsx         # Routing configuration
+│   │   └── main.tsx        # React mounting entry point
 │   ├── .env.example
 │   └── package.json
-├── postman_collection.json
+├── postman_collection.json # Complete API collection
 └── README.md
 ```
 
@@ -83,60 +82,59 @@ full stack/
 
 ## 6. Database Setup
 
-Database schema uses `CREATE TABLE IF NOT EXISTS` across 7 tables:
+Database schema includes 7 relational tables:
 `users`, `customers`, `customer_followups`, `products`, `stock_movements`, `challans`, `challan_items`.
 
-### Schema execution (Local PostgreSQL):
+### Local PostgreSQL:
 ```bash
-psql -U postgres -c "CREATE DATABASE minierp_crm;"
-psql -U postgres -d minierp_crm -f backend/src/db/schema.sql
+psql -U postgres -c "CREATE DATABASE stockly;"
+psql -U postgres -d stockly -f backend/src/db/schema.sql
 npm run db:seed --prefix backend
 ```
 
-### Embedded PGlite engine (Fallback):
-If no local PostgreSQL instance is running, the server automatically initializes PGlite, creates tables, and auto-seeds initial data on first run.
+### Embedded Engine (PGlite - Default Fallback):
+If local PostgreSQL is not running, the backend automatically initializes an embedded PGlite database, creates schema tables, and populates seed data on startup.
 
 ---
 
 ## 7. Environment Variables
 
-Documented in `backend/.env.example` and `frontend/.env.example`:
+Documented in `backend/.env.example`:
 
-### `backend/.env`
 ```env
 PORT=5000
 NODE_ENV=development
-DATABASE_URL=postgres://postgres:postgres@localhost:5432/minierp_crm
-JWT_SECRET=super_secret_jwt_key_minierp_crm_2026_dev
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/stockly
+JWT_SECRET=super_secret_jwt_key_stockly_2026_dev
 CLIENT_URL=http://localhost:5173
+
+# Email Notification Settings
+NOTIFICATION_EMAIL=emperoryagnesh@gmail.com
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your_email@gmail.com
+SMTP_PASS=your_app_password
+SMTP_FROM="Stockly Portal" <noreply@stockly.com>
 ```
 
 ---
 
-## 8. Installation
+## 8. Local Setup & Running Instructions
 
 ```bash
-# Install backend dependencies
+# 1. Install Backend Dependencies
 cd backend
 npm install
 
-# Install frontend dependencies
+# 2. Install Frontend Dependencies
 cd ../frontend
 npm install
-```
 
----
-
-## 9. Running Locally
-
-Start backend and frontend in separate terminals:
-
-```bash
-# Terminal 1 - Backend (port 5000)
+# 3. Run Backend (Terminal 1)
 cd backend
 npm run dev
 
-# Terminal 2 - Frontend (port 5173)
+# 4. Run Frontend (Terminal 2)
 cd frontend
 npm run dev
 ```
@@ -145,75 +143,69 @@ Open browser at `http://localhost:5173`.
 
 ---
 
-## 10. Test Credentials
+## 9. Test Login Credentials
 
-| Role | Email | Password | Allowed Access |
+| Role | Email | Password | Access Scope |
 |---|---|---|---|
-| Admin | admin@example.com | `password123` | Full system access |
-| Sales | sales@example.com | `password123` | Customers, CRM, Challans, Products |
-| Warehouse | warehouse@example.com | `password123` | Products, Stock Movements, Challan view/confirm |
-| Accounts | accounts@example.com | `password123` | Read-only view of Customers, Products, Challans |
+| Admin | `admin@stockly.com` | `admin123` | Full access (CRM, Inventory, Sales Challans, Users) |
+| Sales | `sales@stockly.com` | `sales123` | CRM, Sales Challans, Products |
+| Warehouse | `warehouse@stockly.com` | `warehouse123` | Products, Stock Movements, Sales Challans |
+| Accounts | `accounts@stockly.com` | `accounts123` | Read-only view of Customers, Products, Challans |
 
 ---
 
-## 11. API Documentation
+## 10. API Endpoints
 
-Base URL: `http://localhost:5000/api`
+Base API URL: `http://localhost:5000/api`
 
-### Auth
-- `POST /api/auth/login` - Authenticate & obtain JWT
-- `GET /api/auth/me` - Get logged-in user profile
+### Auth & User Routes
+- `POST /api/auth/login` - Authenticate user & get JWT token
+- `POST /api/auth/register` - Create user & send email notification to `emperoryagnesh@gmail.com`
+- `GET /api/auth/me` - Get active logged-in profile
 - `GET /api/auth/users` - Admin: List system users
 
-### Customers CRM
-- `GET /api/customers` - List customers (`?search=`, `?status=`, `?type=`, `?page=`)
-- `GET /api/customers/:id` - Get customer details
-- `POST /api/customers` - Create new customer
-- `PUT /api/customers/:id` - Update customer
-- `DELETE /api/customers/:id` - Admin: Delete customer
+### Customer CRM Routes
+- `GET /api/customers` - List customer directory (`?search=`, `?status=`, `?type=`)
+- `GET /api/customers/:id` - Customer detail view
+- `POST /api/customers` - Create customer
+- `PUT /api/customers/:id` - Update customer details
 - `POST /api/customers/:id/followups` - Log CRM follow-up note
-- `GET /api/customers/:id/followups` - View customer follow-up history
+- `GET /api/customers/:id/followups` - Get follow-up note history
 
-### Products & Inventory
+### Product and Inventory Routes
 - `GET /api/products` - List products (`?search=`, `?category=`, `?lowStock=true`)
-- `GET /api/products/:id` - Get product details
-- `POST /api/products` - Create product
+- `GET /api/products/:id` - Product details
+- `POST /api/products` - Add new product
 - `PUT /api/products/:id` - Update product
 - `POST /api/products/:id/stock-movement` - Record manual IN/OUT stock movement
-- `GET /api/products/:id/stock-movements` - View product movement history
-- `GET /api/stock-movements` - Global stock audit log
+- `GET /api/products/:id/stock-movements` - View product stock audit history
+- `GET /api/stock-movements` - Global stock movement audit log
 
-### Sales Challans
-- `GET /api/challans` - List sales challans (`?search=`, `?status=`, `?page=`)
-- `GET /api/challans/:id` - Get challan details & line items
+### Sales Challan Routes
+- `GET /api/challans` - List sales challans (`?search=`, `?status=`)
+- `GET /api/challans/:id` - Get sales challan detail & line items
 - `POST /api/challans` - Create Draft challan (or confirm immediately)
 - `POST /api/challans/:id/confirm` - Confirm challan & deduct stock in DB transaction
 - `POST /api/challans/:id/cancel` - Cancel Draft challan
 
-### Dashboard
-- `GET /api/dashboard/stats` - Summary metrics (totals, low stock alerts, recent activity)
+### Dashboard Routes
+- `GET /api/dashboard/stats` - Fetch summary cards & recent activity
 
 ---
 
-## 12. Deployment
+## 11. Git & Deployment Instructions
 
-1. **Database**: Provision PostgreSQL database (Supabase, Neon, Render Postgres). Run `schema.sql`.
-2. **Backend**: Deploy to Node.js host (Render, Railway, Fly.io). Set environment variables (`DATABASE_URL`, `JWT_SECRET`, `CLIENT_URL`).
-3. **Frontend**: Build dist assets with `npm run build`. Deploy to static host (Vercel, Netlify).
-
----
-
-## 13. Assumptions
-
-- Customer GST number is optional
-- Confirmed challans cannot be cancelled or modified
-- Stock deduction occurs strictly upon challan confirmation
-- Product details on created challans are locked snapshot records
+### Commit & Push to GitHub:
+```bash
+git add .
+git commit -m "feat: complete Stockly portal with email notification on new registration"
+git push origin main
+```
 
 ---
 
-## 14. Known Limitations
+## 12. Assumptions & Known Constraints
 
-- PDF download/export is not included in current scope
-- Automated email notifications are not configured
-- User management is read-only in UI (users created via database/seed)
+- Stock reduction occurs strictly on challan confirmation (not on Draft).
+- Product details are captured as static snapshots on challan creation to preserve historical accuracy.
+- Email notifications fallback to clean console logs when SMTP credentials are not configured in `.env`.
