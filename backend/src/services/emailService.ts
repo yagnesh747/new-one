@@ -23,7 +23,12 @@ export class EmailService {
 
     // Auto-fallback to Ethereal Test Account if no SMTP settings provided
     try {
-      const testAccount = await nodemailer.createTestAccount();
+      const testAccount = await Promise.race([
+        nodemailer.createTestAccount(),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('SMTP test account creation timeout')), 3000)
+        ),
+      ]);
       const testTransporter = nodemailer.createTransport({
         host: 'smtp.ethereal.email',
         port: 587,
@@ -35,7 +40,7 @@ export class EmailService {
       });
       return { transporter: testTransporter, isTest: true };
     } catch (e) {
-      console.error('[Email Service] Unable to create test SMTP account:', e);
+      console.warn('[Email Service Warning] Unable to connect to test SMTP server:', (e as Error).message);
       return null;
     }
   }
