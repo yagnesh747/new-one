@@ -127,8 +127,12 @@ export class CustomerService {
 
     for (const field of fields) {
       if (data[field] !== undefined) {
+        let val = data[field];
+        if (typeof val === 'string' && val.trim() === '' && ['follow_up_date', 'gst_number', 'notes'].includes(field)) {
+          val = null;
+        }
         updates.push(`${field} = $${valCount}`);
-        values.push(data[field]);
+        values.push(val);
         valCount++;
       }
     }
