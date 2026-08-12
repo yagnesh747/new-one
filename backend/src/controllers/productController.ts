@@ -1,65 +1,97 @@
 import { Request, Response, NextFunction } from 'express';
-import { ProductService } from '../services/productService';
+import * as productService from '../services/productService';
+import { productSchema, stockMovementSchema } from '../validators/productValidator';
 
-export class ProductController {
-  static async getProducts(req: Request, res: Response, next: NextFunction) {
-    try {
-      const { search, category, lowStock, page, limit } = req.query;
-      const result = await ProductService.getProducts({
-        search: search as string,
-        category: category as string,
-        lowStock: lowStock === 'true',
-        page: page ? parseInt(page as string, 10) : undefined,
-        limit: limit ? parseInt(limit as string, 10) : undefined,
-      });
+export const getProducts = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const search = req.query.search as string | undefined;
+    const category = req.query.category as string | undefined;
+    const lowStock = req.query.lowStock === 'true';
 
-      res.status(200).json({
-        status: 'success',
-        data: result.products,
-        pagination: result.pagination,
-      });
-    } catch (error) {
-      next(error);
-    }
+    const products = await productService.getProducts(search, category, lowStock);
+    res.status(200).json(products);
+  } catch (error) {
+    next(error);
   }
+};
 
-  static async getProductById(req: Request, res: Response, next: NextFunction) {
-    try {
-      const id = req.params.id as string;
-      const product = await ProductService.getProductById(id);
-      res.status(200).json({
-        status: 'success',
-        data: product,
-      });
-    } catch (error) {
-      next(error);
-    }
+export const getProductById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const paramId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const id = parseInt(paramId, 10);
+    const product = await productService.getProductById(id);
+    res.status(200).json(product);
+  } catch (error) {
+    next(error);
   }
+};
 
-  static async createProduct(req: Request, res: Response, next: NextFunction) {
-    try {
-      const product = await ProductService.createProduct(req.body);
-      res.status(201).json({
-        status: 'success',
-        message: 'Product created successfully.',
-        data: product,
+export const createProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const parseResult = productSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      res.status(400).json({
+        message: 'Validation failed',
+        errors: parseResult.error.issues.map((e) => e.message),
       });
-    } catch (error) {
-      next(error);
+      return;
     }
-  }
 
-  static async updateProduct(req: Request, res: Response, next: NextFunction) {
-    try {
-      const id = req.params.id as string;
-      const product = await ProductService.updateProduct(id, req.body);
-      res.status(200).json({
-        status: 'success',
-        message: 'Product updated successfully.',
-        data: product,
-      });
-    } catch (error) {
-      next(error);
-    }
+    const product = await productService.createProduct(parseResult.data);
+    res.status(201).json(product);
+  } catch (error) {
+    next(error);
   }
-}
+};
+
+export const updateProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const paramId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const id = parseInt(paramId, 10);
+    const parseResult = productSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      res.status(400).json({
+        message: 'Validation failed',
+        errors: parseResult.error.issues.map((e) => e.message),
+      });
+      return;
+    }
+
+    const product = await productService.updateProduct(id, parseResult.data);
+    res.status(200).json(product);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getStockMovements = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const prodIdQuery = req.query.productId ? (Array.isArray(req.query.productId) ? req.query.productId[0] : req.query.productId) : undefined;
+    const productId = prodIdQuery ? parseInt(prodIdQuery as string, 10) : undefined;
+    const movements = await productService.getStockMovements(productId);
+    res.status(200).json(movements);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const addStockMovement = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const parseResult = stockMovementSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      res.status(400).json({
+        message: 'Validation failed',
+        errors: parseResult.error.issues.map((e) => e.message),
+      });
+      return;
+    }
+
+    const userId = req.user!.id;
+    const { product_id, quantity, movement_type, reason } = parseResult.data;
+
+    const movement = await productService.addManualStockMovement(product_id, quantity, movement_type, reason, userId);
+    res.status(201).json(movement);
+  } catch (error) {
+    next(error);
+  }
+};

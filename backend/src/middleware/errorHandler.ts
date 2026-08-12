@@ -1,24 +1,28 @@
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from '../utils/appError';
 
-export const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
-  let statusCode = err.statusCode || 500;
-  let message = err.message || 'Internal server error occurred.';
+export class AppError extends Error {
+  statusCode: number;
 
-  // PostgreSQL unique violation error (23505)
-  if (err.code === '23505') {
-    statusCode = 409;
-    message = 'Duplicate entry detected. Resource already exists.';
+  constructor(message: string, statusCode: number = 400) {
+    super(message);
+    this.statusCode = statusCode;
+    Object.setPrototypeOf(this, AppError.prototype);
   }
+}
 
-  // Log error details for server diagnostics
-  if (statusCode === 500) {
-    console.error('Unhandled System Error:', err);
-  }
+export const errorHandler = (
+  err: any,
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  console.error('API Error:', err);
+
+  const statusCode = err.statusCode || err.status || 500;
+  const message = err.message || 'An unexpected internal server error occurred.';
 
   res.status(statusCode).json({
-    status: statusCode < 500 ? 'fail' : 'error',
     message,
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    ...(process.env.NODE_ENV === 'development' ? { stack: err.stack } : {}),
   });
 };

@@ -1,26 +1,34 @@
 import React from 'react';
 
+type StatusType =
+  | 'Active' | 'Inactive' | 'Lead'
+  | 'Draft' | 'Confirmed' | 'Cancelled'
+  | 'IN' | 'OUT'
+  | 'low-stock'
+  | 'Retail' | 'Wholesale' | 'Distributor';
+
 interface StatusBadgeProps {
-  status: string;
-  type?: 'customerStatus' | 'customerType' | 'challanStatus' | 'movementType' | 'stock';
+  status: StatusType | string;
 }
 
-export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, type = 'customerStatus' }) => {
-  let badgeClass = 'badge';
-
-  const s = status.toLowerCase();
-
-  if (s === 'active' || s === 'confirmed' || s === 'in') {
-    badgeClass += ' badge-active';
-  } else if (s === 'lead' || s === 'draft') {
-    badgeClass += ' badge-lead';
-  } else if (s === 'inactive' || s === 'cancelled' || s === 'out') {
-    badgeClass += ' badge-inactive';
-  } else if (s === 'low stock') {
-    badgeClass += ' badge-low-stock';
-  } else {
-    badgeClass += ' badge-lead';
-  }
-
-  return <span className={badgeClass}>{status}</span>;
+const STATUS_CLASS_MAP: Record<string, string> = {
+  Active: 'badge-active',
+  Inactive: 'badge-inactive',
+  Lead: 'badge-lead',
+  Draft: 'badge-draft',
+  Confirmed: 'badge-confirmed',
+  Cancelled: 'badge-cancelled',
+  IN: 'badge-in',
+  OUT: 'badge-out',
+  'low-stock': 'badge-low-stock',
+  Retail: 'badge-lead',
+  Wholesale: 'badge-confirmed',
+  Distributor: 'badge-inactive',
 };
+
+const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
+  const cls = STATUS_CLASS_MAP[status] || 'badge-inactive';
+  return <span className={`badge ${cls}`}>{status}</span>;
+};
+
+export default StatusBadge;

@@ -1,85 +1,71 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard,
   Users,
   Package,
   FileText,
-  UserCheck,
-  Boxes,
+  LogOut,
 } from 'lucide-react';
 
-export const Sidebar: React.FC = () => {
-  const { user } = useAuth();
+const Sidebar: React.FC = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
-  if (!user) return null;
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
-  const role = user.role;
-
-  const showCustomers = ['Admin', 'Sales', 'Accounts'].includes(role);
-  const showProducts = ['Admin', 'Sales', 'Warehouse', 'Accounts'].includes(role);
-  const showChallans = ['Admin', 'Sales', 'Warehouse', 'Accounts'].includes(role);
-  const showUsers = role === 'Admin';
+  const navItems = [
+    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/customers', label: 'Customer CRM', icon: Users },
+    { to: '/products', label: 'Product and Inventory', icon: Package },
+    { to: '/challans', label: 'Sales Challan', icon: FileText },
+  ];
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-header">
-        <div className="sidebar-brand">
-          <Boxes size={22} className="text-primary" />
-          <span>Stockly</span>
-        </div>
+      <div className="sidebar-logo">
+        <span className="sidebar-logo-text">Stockly</span>
       </div>
 
       <nav className="sidebar-nav">
-        <NavLink
-          to="/dashboard"
-          className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
-        >
-          <LayoutDashboard size={18} />
-          <span>Dashboard</span>
-        </NavLink>
-
-        {showCustomers && (
-          <NavLink
-            to="/customers"
-            className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
-          >
-            <Users size={18} />
-            <span>Customer CRM</span>
-          </NavLink>
-        )}
-
-        {showProducts && (
-          <NavLink
-            to="/products"
-            className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
-          >
-            <Package size={18} />
-            <span>Product and Inventory</span>
-          </NavLink>
-        )}
-
-        {showChallans && (
-          <NavLink
-            to="/challans"
-            className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
-          >
-            <FileText size={18} />
-            <span>Sales Challan</span>
-          </NavLink>
-        )}
-
-        {showUsers && (
-          <NavLink
-            to="/users"
-            className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
-          >
-            <UserCheck size={18} />
-            <span>Users</span>
-          </NavLink>
-        )}
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+            >
+              <Icon size={16} strokeWidth={1.8} />
+              {item.label}
+            </NavLink>
+          );
+        })}
       </nav>
+
+      <div className="sidebar-footer">
+        {user && (
+          <div className="user-info">
+            <div className="user-name">{user.name}</div>
+            <div className="user-role">{user.role}</div>
+          </div>
+        )}
+        <button
+          className="btn btn-secondary btn-sm"
+          style={{ width: '100%', justifyContent: 'center' }}
+          onClick={handleLogout}
+          id="logout-btn"
+        >
+          <LogOut size={14} />
+          Logout
+        </button>
+      </div>
     </aside>
   );
 };
+
+export default Sidebar;

@@ -1,0 +1,299 @@
+{
+  "info": {
+    "_postman_id": "stockly-api-collection",
+    "name": "Stockly API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Stockly Internal Operations Portal - API Collection"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:5000/api", "type": "string" },
+    { "key": "token", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login - Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["const json = pm.response.json();", "pm.collectionVariables.set('token', json.token);", "pm.test('Login successful', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"email\":\"admin@example.com\",\"password\":\"password123\"}" },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Login - Sales",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"email\":\"sales@example.com\",\"password\":\"password123\"}" },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Login - Invalid Credentials",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"email\":\"admin@example.com\",\"password\":\"wrongpassword\"}" },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Get Current User (me)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/auth/me", "host": ["{{base_url}}"], "path": ["auth", "me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer CRM",
+      "item": [
+        {
+          "name": "Get All Customers",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/customers", "host": ["{{base_url}}"], "path": ["customers"] }
+          }
+        },
+        {
+          "name": "Search Customers",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/customers?search=Apex&status=Active",
+              "host": ["{{base_url}}"],
+              "path": ["customers"],
+              "query": [{ "key": "search", "value": "Apex" }, { "key": "status", "value": "Active" }]
+            }
+          }
+        },
+        {
+          "name": "Create Customer",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Test Customer\",\"mobile\":\"+91 99999 00001\",\"email\":\"test@customer.com\",\"business_name\":\"Test Supplies Co.\",\"type\":\"Wholesale\",\"address\":\"123 Test Street, Mumbai\",\"status\":\"Lead\",\"followup_date\":\"2026-09-01\"}"
+            },
+            "url": { "raw": "{{base_url}}/customers", "host": ["{{base_url}}"], "path": ["customers"] }
+          }
+        },
+        {
+          "name": "Get Customer by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/customers/1", "host": ["{{base_url}}"], "path": ["customers", "1"] }
+          }
+        },
+        {
+          "name": "Update Customer",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Apex Electricals Pvt Ltd\",\"mobile\":\"+91 98200 12345\",\"email\":\"procurement@apexelectricals.com\",\"business_name\":\"Apex Electricals\",\"type\":\"Wholesale\",\"address\":\"Plot 42, Industrial Area Phase 2, Mumbai\",\"status\":\"Active\",\"gst_number\":\"27AAACA1234A1Z5\"}"
+            },
+            "url": { "raw": "{{base_url}}/customers/1", "host": ["{{base_url}}"], "path": ["customers", "1"] }
+          }
+        },
+        {
+          "name": "Get Customer Follow-ups",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/customers/1/followups", "host": ["{{base_url}}"], "path": ["customers", "1", "followups"] }
+          }
+        },
+        {
+          "name": "Add Customer Follow-up Note",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"note\":\"Discussed new circuit breaker order. Will send formal RFQ by Friday.\"}" },
+            "url": { "raw": "{{base_url}}/customers/1/followups", "host": ["{{base_url}}"], "path": ["customers", "1", "followups"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Product and Inventory",
+      "item": [
+        {
+          "name": "Get All Products",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/products", "host": ["{{base_url}}"], "path": ["products"] }
+          }
+        },
+        {
+          "name": "Get Low Stock Products",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/products?lowStock=true",
+              "host": ["{{base_url}}"],
+              "path": ["products"],
+              "query": [{ "key": "lowStock", "value": "true" }]
+            }
+          }
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Test LED Panel 24W\",\"sku\":\"ELEC-LED-024\",\"category\":\"Electrical\",\"unit_price\":1200,\"current_stock\":50,\"min_stock_alert\":10,\"location\":\"Warehouse A - Bay 2\"}"
+            },
+            "url": { "raw": "{{base_url}}/products", "host": ["{{base_url}}"], "path": ["products"] }
+          }
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Industrial Circuit Breaker 32A 3-Phase\",\"sku\":\"ELEC-CB-032\",\"category\":\"Electrical\",\"unit_price\":1500,\"current_stock\":45,\"min_stock_alert\":10,\"location\":\"Warehouse A - Bay 3\"}"
+            },
+            "url": { "raw": "{{base_url}}/products/1", "host": ["{{base_url}}"], "path": ["products", "1"] }
+          }
+        },
+        {
+          "name": "Get All Stock Movements",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/products/stock-movements", "host": ["{{base_url}}"], "path": ["products", "stock-movements"] }
+          }
+        },
+        {
+          "name": "Add Stock Movement (IN)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"product_id\":1,\"quantity\":20,\"movement_type\":\"IN\",\"reason\":\"Purchase order received from supplier\"}" },
+            "url": { "raw": "{{base_url}}/products/stock-movements", "host": ["{{base_url}}"], "path": ["products", "stock-movements"] }
+          }
+        },
+        {
+          "name": "Add Stock Movement (OUT)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"product_id\":1,\"quantity\":5,\"movement_type\":\"OUT\",\"reason\":\"Manual dispatch for local order\"}" },
+            "url": { "raw": "{{base_url}}/products/stock-movements", "host": ["{{base_url}}"], "path": ["products", "stock-movements"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sales Challan",
+      "item": [
+        {
+          "name": "Get All Challans",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/challans", "host": ["{{base_url}}"], "path": ["challans"] }
+          }
+        },
+        {
+          "name": "Create Challan - Draft",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"customer_id\":1,\"status\":\"Draft\",\"items\":[{\"product_id\":1,\"quantity\":3},{\"product_id\":5,\"quantity\":10}]}"
+            },
+            "url": { "raw": "{{base_url}}/challans", "host": ["{{base_url}}"], "path": ["challans"] }
+          }
+        },
+        {
+          "name": "Create Challan - Confirmed (sufficient stock)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"customer_id\":2,\"status\":\"Confirmed\",\"items\":[{\"product_id\":3,\"quantity\":5}]}"
+            },
+            "url": { "raw": "{{base_url}}/challans", "host": ["{{base_url}}"], "path": ["challans"] }
+          }
+        },
+        {
+          "name": "Get Challan by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/challans/1", "host": ["{{base_url}}"], "path": ["challans", "1"] }
+          }
+        },
+        {
+          "name": "Confirm Draft Challan (ID: 2)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/challans/2/confirm", "host": ["{{base_url}}"], "path": ["challans", "2", "confirm"] }
+          }
+        },
+        {
+          "name": "TEST - Insufficient Stock (should return 400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"customer_id\":1,\"status\":\"Confirmed\",\"items\":[{\"product_id\":4,\"quantity\":999}]}"
+            },
+            "url": { "raw": "{{base_url}}/challans", "host": ["{{base_url}}"], "path": ["challans"] }
+          }
+        },
+        {
+          "name": "Cancel Challan (Draft)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/challans/2/cancel", "host": ["{{base_url}}"], "path": ["challans", "2", "cancel"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/dashboard/stats", "host": ["{{base_url}}"], "path": ["dashboard", "stats"] }
+          }
+        }
+      ]
+    }
+  ]
+}

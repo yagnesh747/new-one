@@ -1,30 +1,23 @@
 import { Router } from 'express';
-import { CustomerController } from '../controllers/customerController';
-import { authenticate } from '../middleware/authMiddleware';
-import { authorize } from '../middleware/roleMiddleware';
-import { validate } from '../middleware/validateMiddleware';
-import {
-  createCustomerSchema,
-  updateCustomerSchema,
-  addFollowUpSchema,
-} from '../validators/customer.validator';
+import * as customerController from '../controllers/customerController';
+import { authenticateToken } from '../middleware/authMiddleware';
+import { authorizeRoles } from '../middleware/roleMiddleware';
 
 const router = Router();
 
-router.use(authenticate);
+router.use(authenticateToken);
 
-router.get('/', authorize(['Admin', 'Sales', 'Accounts']), CustomerController.getCustomers);
-router.get('/:id', authorize(['Admin', 'Sales', 'Accounts']), CustomerController.getCustomerById);
-router.post('/', authorize(['Admin', 'Sales']), validate(createCustomerSchema), CustomerController.createCustomer);
-router.put('/:id', authorize(['Admin', 'Sales']), validate(updateCustomerSchema), CustomerController.updateCustomer);
-router.delete('/:id', authorize(['Admin']), CustomerController.deleteCustomer);
+// View customers (Admin, Sales, Accounts)
+router.get('/', authorizeRoles('Admin', 'Sales', 'Accounts'), customerController.getCustomers);
+router.get('/:id', authorizeRoles('Admin', 'Sales', 'Accounts'), customerController.getCustomerById);
+router.get('/:id/followups', authorizeRoles('Admin', 'Sales', 'Accounts'), customerController.getCustomerFollowups);
 
-router.post(
-  '/:id/followups',
-  authorize(['Admin', 'Sales']),
-  validate(addFollowUpSchema),
-  CustomerController.addFollowUp
-);
-router.get('/:id/followups', authorize(['Admin', 'Sales', 'Accounts']), CustomerController.getFollowUps);
+// Manage customers (Admin, Sales)
+router.post('/', authorizeRoles('Admin', 'Sales'), customerController.createCustomer);
+router.put('/:id', authorizeRoles('Admin', 'Sales'), customerController.updateCustomer);
+router.post('/:id/followups', authorizeRoles('Admin', 'Sales'), customerController.addCustomerFollowup);
+
+// Delete customer (Admin only)
+router.delete('/:id', authorizeRoles('Admin'), customerController.deleteCustomer);
 
 export default router;

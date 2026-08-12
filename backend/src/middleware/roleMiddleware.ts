@@ -1,17 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
-import { UserRole } from '../models/user.model';
-import { AppError } from '../utils/appError';
+import { UserRole } from '../types';
 
-export const authorize = (allowedRoles: UserRole[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+export const authorizeRoles = (...allowedRoles: UserRole[]) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      return next(new AppError('Authentication required.', 401));
+      res.status(401).json({ message: 'Authentication required.' });
+      return;
     }
 
     if (!allowedRoles.includes(req.user.role)) {
-      return next(
-        new AppError(`Access denied. Role '${req.user.role}' is not authorized to perform this operation.`, 403)
-      );
+      res.status(403).json({
+        message: `Forbidden. Role '${req.user.role}' does not have permission to perform this action. Required: [${allowedRoles.join(', ')}]`,
+      });
+      return;
     }
 
     next();

@@ -1,47 +1,42 @@
-import express from 'express';
+import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes';
 import customerRoutes from './routes/customerRoutes';
 import productRoutes from './routes/productRoutes';
-import stockRoutes from './routes/stockRoutes';
 import challanRoutes from './routes/challanRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
 import { errorHandler } from './middleware/errorHandler';
-import { AppError } from './utils/appError';
 
 dotenv.config();
 
-const app = express();
+const app: Application = express();
 
-// Middlewares
+// CORS configuration
+const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || '*',
+    origin: '*', // Allow development & production frontend origins
     credentials: true,
   })
 );
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'success', message: 'API status: OK' });
+// Health Check
+app.get('/api/health', (req: Request, res: Response) => {
+  res.status(200).json({ status: 'OK', app: 'Stockly Backend API', timestamp: new Date() });
 });
 
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/products', productRoutes);
-app.use('/api/stock-movements', stockRoutes);
 app.use('/api/challans', challanRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
-// 404 Route Handler
-app.use('*', (req, res, next) => {
-  next(new AppError(`Cannot find path ${req.originalUrl} on this server.`, 404));
-});
-
-// Centralized Error Handling Middleware
+// Centralized Error Handling
 app.use(errorHandler);
 
 export default app;

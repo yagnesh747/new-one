@@ -1,112 +1,108 @@
 import { Request, Response, NextFunction } from 'express';
-import { CustomerService } from '../services/customerService';
+import * as customerService from '../services/customerService';
+import { customerSchema, followupSchema } from '../validators/customerValidator';
 
-export class CustomerController {
-  static async getCustomers(req: Request, res: Response, next: NextFunction) {
-    try {
-      const { search, status, type, page, limit } = req.query;
-      const result = await CustomerService.getCustomers({
-        search: search as string,
-        status: status as string,
-        type: type as string,
-        page: page ? parseInt(page as string, 10) : undefined,
-        limit: limit ? parseInt(limit as string, 10) : undefined,
-      });
+export const getCustomers = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const search = req.query.search as string | undefined;
+    const status = req.query.status as string | undefined;
+    const type = req.query.type as string | undefined;
 
-      res.status(200).json({
-        status: 'success',
-        data: result.customers,
-        pagination: result.pagination,
-      });
-    } catch (error) {
-      next(error);
-    }
+    const customers = await customerService.getCustomers(search, status, type);
+    res.status(200).json(customers);
+  } catch (error) {
+    next(error);
   }
+};
 
-  static async getCustomerById(req: Request, res: Response, next: NextFunction) {
-    try {
-      const id = req.params.id as string;
-      const customer = await CustomerService.getCustomerById(id);
-      res.status(200).json({
-        status: 'success',
-        data: customer,
-      });
-    } catch (error) {
-      next(error);
-    }
+export const getCustomerById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const paramId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const id = parseInt(paramId, 10);
+    const customer = await customerService.getCustomerById(id);
+    res.status(200).json(customer);
+  } catch (error) {
+    next(error);
   }
+};
 
-  static async createCustomer(req: Request, res: Response, next: NextFunction) {
-    try {
-      const customer = await CustomerService.createCustomer(req.body);
-      res.status(201).json({
-        status: 'success',
-        message: 'Customer created successfully.',
-        data: customer,
+export const createCustomer = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const parseResult = customerSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      res.status(400).json({
+        message: 'Validation failed',
+        errors: parseResult.error.issues.map((e) => e.message),
       });
-    } catch (error) {
-      next(error);
+      return;
     }
-  }
 
-  static async updateCustomer(req: Request, res: Response, next: NextFunction) {
-    try {
-      const id = req.params.id as string;
-      const customer = await CustomerService.updateCustomer(id, req.body);
-      res.status(200).json({
-        status: 'success',
-        message: 'Customer updated successfully.',
-        data: customer,
+    const customer = await customerService.createCustomer(parseResult.data);
+    res.status(201).json(customer);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateCustomer = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const paramId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const id = parseInt(paramId, 10);
+    const parseResult = customerSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      res.status(400).json({
+        message: 'Validation failed',
+        errors: parseResult.error.issues.map((e) => e.message),
       });
-    } catch (error) {
-      next(error);
+      return;
     }
-  }
 
-  static async deleteCustomer(req: Request, res: Response, next: NextFunction) {
-    try {
-      const id = req.params.id as string;
-      await CustomerService.deleteCustomer(id);
-      res.status(200).json({
-        status: 'success',
-        message: 'Customer deleted successfully.',
+    const customer = await customerService.updateCustomer(id, parseResult.data);
+    res.status(200).json(customer);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteCustomer = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const paramId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const id = parseInt(paramId, 10);
+    await customerService.deleteCustomer(id);
+    res.status(200).json({ message: 'Customer deleted successfully.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getCustomerFollowups = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const paramId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const id = parseInt(paramId, 10);
+    const followups = await customerService.getCustomerFollowups(id);
+    res.status(200).json(followups);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const addCustomerFollowup = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const paramId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const id = parseInt(paramId, 10);
+    const parseResult = followupSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      res.status(400).json({
+        message: 'Validation failed',
+        errors: parseResult.error.issues.map((e) => e.message),
       });
-    } catch (error) {
-      next(error);
+      return;
     }
-  }
 
-  static async addFollowUp(req: Request, res: Response, next: NextFunction) {
-    try {
-      const id = req.params.id as string;
-      const { note, follow_up_date } = req.body;
-      const followUp = await CustomerService.addFollowUp(
-        id,
-        note,
-        follow_up_date,
-        req.user?.id
-      );
-
-      res.status(201).json({
-        status: 'success',
-        message: 'Follow-up note recorded.',
-        data: followUp,
-      });
-    } catch (error) {
-      next(error);
-    }
+    const userId = req.user!.id;
+    const followup = await customerService.addCustomerFollowup(id, parseResult.data.note, userId);
+    res.status(201).json(followup);
+  } catch (error) {
+    next(error);
   }
-
-  static async getFollowUps(req: Request, res: Response, next: NextFunction) {
-    try {
-      const id = req.params.id as string;
-      const followUps = await CustomerService.getFollowUps(id);
-      res.status(200).json({
-        status: 'success',
-        data: followUps,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-}
+};

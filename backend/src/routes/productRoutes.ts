@@ -1,30 +1,20 @@
 import { Router } from 'express';
-import { ProductController } from '../controllers/productController';
-import { StockController } from '../controllers/stockController';
-import { authenticate } from '../middleware/authMiddleware';
-import { authorize } from '../middleware/roleMiddleware';
-import { validate } from '../middleware/validateMiddleware';
-import {
-  createProductSchema,
-  updateProductSchema,
-  stockAdjustmentSchema,
-} from '../validators/product.validator';
+import * as productController from '../controllers/productController';
+import { authenticateToken } from '../middleware/authMiddleware';
+import { authorizeRoles } from '../middleware/roleMiddleware';
 
 const router = Router();
 
-router.use(authenticate);
+router.use(authenticateToken);
 
-router.get('/', authorize(['Admin', 'Sales', 'Warehouse', 'Accounts']), ProductController.getProducts);
-router.get('/:id', authorize(['Admin', 'Sales', 'Warehouse', 'Accounts']), ProductController.getProductById);
-router.post('/', authorize(['Admin', 'Warehouse']), validate(createProductSchema), ProductController.createProduct);
-router.put('/:id', authorize(['Admin', 'Warehouse']), validate(updateProductSchema), ProductController.updateProduct);
+// View products (All authenticated roles)
+router.get('/', authorizeRoles('Admin', 'Sales', 'Warehouse', 'Accounts'), productController.getProducts);
+router.get('/stock-movements', authorizeRoles('Admin', 'Sales', 'Warehouse', 'Accounts'), productController.getStockMovements);
+router.get('/:id', authorizeRoles('Admin', 'Sales', 'Warehouse', 'Accounts'), productController.getProductById);
 
-router.post(
-  '/:id/stock-movement',
-  authorize(['Admin', 'Warehouse']),
-  validate(stockAdjustmentSchema),
-  StockController.addStockMovement
-);
-router.get('/:id/stock-movements', authorize(['Admin', 'Warehouse', 'Sales', 'Accounts']), StockController.getStockMovements);
+// Manage products & stock movements (Admin, Warehouse)
+router.post('/', authorizeRoles('Admin', 'Warehouse'), productController.createProduct);
+router.put('/:id', authorizeRoles('Admin', 'Warehouse'), productController.updateProduct);
+router.post('/stock-movements', authorizeRoles('Admin', 'Warehouse'), productController.addStockMovement);
 
 export default router;

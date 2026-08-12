@@ -1,27 +1,24 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyToken, JwtPayload } from '../utils/jwt';
-import { AppError } from '../utils/appError';
+import jwt from 'jsonwebtoken';
+import { AuthUserPayload } from '../types';
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: JwtPayload;
-    }
-  }
-}
+export const authenticateToken = (req: Request, res: Response, next: NextFunction): void => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
 
-export const authenticate = (req: Request, res: Response, next: NextFunction) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return next(new AppError('Authentication required. Missing token.', 401));
+  if (!token) {
+    res.status(401).json({ message: 'Authentication required. No token provided.' });
+    return;
   }
 
-  const token = authHeader.split(' ')[1];
+  const jwtSecret = process.env.JWT_SECRET || 'stockly_super_secret_jwt_key_2026_production';
+
   try {
-    const decoded = verifyToken(token);
+    const decoded = jwt.verify(token, jwtSecret) as AuthUserPayload;
     req.user = decoded;
     next();
   } catch (error) {
-    return next(new AppError('Invalid or expired authentication token.', 401));
+    res.status(401).json({ message: 'Invalid or expired token. Please log in again.' });
+    return;
   }
 };

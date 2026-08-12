@@ -1,87 +1,80 @@
 import React from 'react';
-import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
-import { Sidebar } from './components/Sidebar';
-import { TopHeader } from './components/TopHeader';
-import { Login } from './pages/Login';
-import { Dashboard } from './pages/Dashboard';
-import { Customers } from './pages/Customers';
-import { CustomerDetail } from './pages/CustomerDetail';
-import { Products } from './pages/Products';
-import { Inventory } from './pages/Inventory';
-import { Challans } from './pages/Challans';
-import { CreateChallan } from './pages/CreateChallan';
-import { ChallanDetail } from './pages/ChallanDetail';
-import { UsersPage } from './pages/Users';
-import { UserRole } from './types';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import Sidebar from './components/Sidebar';
+import Header from './components/Header';
+import LoginPage from './pages/LoginPage';
+import DashboardPage from './pages/DashboardPage';
+import CustomersPage from './pages/CustomersPage';
+import CustomerDetailPage from './pages/CustomerDetailPage';
+import ProductsPage from './pages/ProductsPage';
+import ChallansPage from './pages/ChallansPage';
+import CreateChallanPage from './pages/CreateChallanPage';
+import ChallanDetailPage from './pages/ChallanDetailPage';
+import { useLocation } from 'react-router-dom';
 
-const ProtectedLayout: React.FC = () => {
-  const { user, loading } = useAuth();
+const PAGE_TITLES: Record<string, string> = {
+  '/dashboard': 'Dashboard',
+  '/customers': 'Customer CRM',
+  '/products': 'Product and Inventory',
+  '/challans': 'Sales Challan',
+  '/challans/new': 'Create Challan',
+};
 
-  if (loading) {
-    return <div className="page-container">Verifying session...</div>;
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
+const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const location = useLocation();
+  const path = location.pathname;
+  const title =
+    PAGE_TITLES[path] ||
+    (path.startsWith('/challans/') && path !== '/challans/new' ? 'Challan Details' : '') ||
+    (path.startsWith('/customers/') ? 'Customer Details' : 'Stockly');
 
   return (
     <div className="app-layout">
       <Sidebar />
       <div className="main-content">
-        <TopHeader />
-        <Outlet />
+        <Header title={title} />
+        <main className="page-content">{children}</main>
       </div>
     </div>
   );
 };
 
-const RoleGuard: React.FC<{ allowedRoles: UserRole[]; children: React.ReactElement }> = ({
-  allowedRoles,
-  children,
-}) => {
-  const { hasRole } = useAuth();
-
-  if (!hasRole(allowedRoles)) {
-    return (
-      <div className="page-container">
-        <div className="alert alert-danger">
-          Access Denied: You do not have permission to view this page.
-        </div>
-      </div>
-    );
-  }
-
-  return children;
-};
-
-export const App: React.FC = () => {
+const App: React.FC = () => {
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-
-      <Route element={<ProtectedLayout />}>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/customers" element={<Customers />} />
-        <Route path="/customers/:id" element={<CustomerDetail />} />
-        <Route path="/products" element={<Products />} />
-        <Route path="/inventory" element={<Inventory />} />
-        <Route path="/challans" element={<Challans />} />
-        <Route path="/challans/new" element={<CreateChallan />} />
-        <Route path="/challans/:id" element={<ChallanDetail />} />
-
-        <Route
-          path="/users"
-          element={
-            <RoleGuard allowedRoles={['Admin']}>
-              <UsersPage />
-            </RoleGuard>
-          }
-        />
-
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Route>
-    </Routes>
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/*"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <Routes>
+                    <Route path="/dashboard" element={<DashboardPage />} />
+                    <Route path="/customers" element={<CustomersPage />} />
+                    <Route path="/customers/:id" element={<CustomerDetailPage />} />
+                    <Route path="/products" element={<ProductsPage />} />
+                    <Route path="/challans" element={<ChallansPage />} />
+                    <Route path="/challans/new" element={
+                      <ProtectedRoute allowedRoles={['Admin', 'Sales']}>
+                        <CreateChallanPage />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/challans/:id" element={<ChallanDetailPage />} />
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                  </Routes>
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
   );
 };
+
+export default App;

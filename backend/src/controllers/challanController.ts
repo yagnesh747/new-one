@@ -1,83 +1,88 @@
 import { Request, Response, NextFunction } from 'express';
-import { ChallanService } from '../services/challanService';
+import * as challanService from '../services/challanService';
+import { createChallanSchema, updateChallanSchema } from '../validators/challanValidator';
 
-export class ChallanController {
-  static async createChallan(req: Request, res: Response, next: NextFunction) {
-    try {
-      const challan = await ChallanService.createChallan({
-        ...req.body,
-        user_id: req.user?.id,
-      });
+export const getChallans = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const search = req.query.search as string | undefined;
+    const status = req.query.status as string | undefined;
 
-      res.status(201).json({
-        status: 'success',
-        message: `Sales Challan #${challan.challan_number} created successfully.`,
-        data: challan,
-      });
-    } catch (error) {
-      next(error);
-    }
+    const challans = await challanService.getChallans(search, status);
+    res.status(200).json(challans);
+  } catch (error) {
+    next(error);
   }
+};
 
-  static async getChallans(req: Request, res: Response, next: NextFunction) {
-    try {
-      const { search, status, customer_id, page, limit } = req.query;
-      const result = await ChallanService.getChallans({
-        search: search as string,
-        status: status as string,
-        customer_id: customer_id as string,
-        page: page ? parseInt(page as string, 10) : undefined,
-        limit: limit ? parseInt(limit as string, 10) : undefined,
-      });
-
-      res.status(200).json({
-        status: 'success',
-        data: result.challans,
-        pagination: result.pagination,
-      });
-    } catch (error) {
-      next(error);
-    }
+export const getChallanById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const paramId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const id = parseInt(paramId, 10);
+    const challan = await challanService.getChallanById(id);
+    res.status(200).json(challan);
+  } catch (error) {
+    next(error);
   }
+};
 
-  static async getChallanById(req: Request, res: Response, next: NextFunction) {
-    try {
-      const id = req.params.id as string;
-      const challan = await ChallanService.getChallanById(id);
-      res.status(200).json({
-        status: 'success',
-        data: challan,
+export const createChallan = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const parseResult = createChallanSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      res.status(400).json({
+        message: 'Validation failed',
+        errors: parseResult.error.issues.map((e) => e.message),
       });
-    } catch (error) {
-      next(error);
+      return;
     }
-  }
 
-  static async confirmChallan(req: Request, res: Response, next: NextFunction) {
-    try {
-      const id = req.params.id as string;
-      const challan = await ChallanService.confirmChallan(id, req.user?.id);
-      res.status(200).json({
-        status: 'success',
-        message: `Sales Challan #${challan.challan_number} confirmed and stock updated.`,
-        data: challan,
-      });
-    } catch (error) {
-      next(error);
-    }
+    const userId = req.user!.id;
+    const challan = await challanService.createChallan(parseResult.data, userId);
+    res.status(201).json(challan);
+  } catch (error) {
+    next(error);
   }
+};
 
-  static async cancelChallan(req: Request, res: Response, next: NextFunction) {
-    try {
-      const id = req.params.id as string;
-      const challan = await ChallanService.cancelChallan(id);
-      res.status(200).json({
-        status: 'success',
-        message: `Sales Challan #${challan.challan_number} cancelled.`,
-        data: challan,
+export const updateDraftChallan = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const paramId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const id = parseInt(paramId, 10);
+    const parseResult = updateChallanSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      res.status(400).json({
+        message: 'Validation failed',
+        errors: parseResult.error.issues.map((e) => e.message),
       });
-    } catch (error) {
-      next(error);
+      return;
     }
+
+    const challan = await challanService.updateDraftChallan(id, parseResult.data);
+    res.status(200).json(challan);
+  } catch (error) {
+    next(error);
   }
-}
+};
+
+export const confirmChallan = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const paramId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const id = parseInt(paramId, 10);
+    const userId = req.user!.id;
+    const challan = await challanService.confirmChallan(id, userId);
+    res.status(200).json(challan);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const cancelChallan = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const paramId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const id = parseInt(paramId, 10);
+    const challan = await challanService.cancelChallan(id);
+    res.status(200).json(challan);
+  } catch (error) {
+    next(error);
+  }
+};

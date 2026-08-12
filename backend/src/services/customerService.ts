@@ -1,198 +1,120 @@
-import { db } from '../config/db';
-import { Customer, CustomerFollowUp } from '../models/customer.model';
-import { AppError } from '../utils/appError';
+import { query } from '../config/db';
+import { AppError } from '../middleware/errorHandler';
+import { Customer, CustomerFollowup } from '../types';
+import * as mem from './memoryStore';
 
-export class CustomerService {
-  static async getCustomers(params: {
-    search?: string;
-    status?: string;
-    type?: string;
-    page?: number;
-    limit?: number;
-  }) {
-    const page = Math.max(1, params.page || 1);
-    const limit = Math.max(1, Math.min(100, params.limit || 10));
-    const offset = (page - 1) * limit;
-
-    const conditions: string[] = [];
-    const values: any[] = [];
-    let valCount = 1;
-
-    if (params.search) {
-      conditions.push(`(customer_name ILIKE $${valCount} OR email ILIKE $${valCount} OR mobile_number ILIKE $${valCount} OR business_name ILIKE $${valCount})`);
-      values.push(`%${params.search.trim()}%`);
-      valCount++;
-    }
-
-    if (params.status) {
-      conditions.push(`status = $${valCount}`);
-      values.push(params.status);
-      valCount++;
-    }
-
-    if (params.type) {
-      conditions.push(`customer_type = $${valCount}`);
-      values.push(params.type);
-      valCount++;
-    }
-
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-
-    const countQuery = `SELECT COUNT(*) as total FROM customers ${whereClause}`;
-    const countRes = await db.query(countQuery, values);
-    const total = parseInt(countRes.rows[0].total, 10);
-
-    const dataQuery = `
-      SELECT * FROM customers
-      ${whereClause}
-      ORDER BY created_at DESC
-      LIMIT $${valCount} OFFSET $${valCount + 1}
-    `;
-
-    const dataRes = await db.query<Customer>(dataQuery, [...values, limit, offset]);
-
-    return {
-      customers: dataRes.rows,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
-  }
-
-  static async getCustomerById(id: string): Promise<Customer> {
-    const query = 'SELECT * FROM customers WHERE id = $1';
-    const result = await db.query<Customer>(query, [id]);
-
-    if (result.rows.length === 0) {
-      throw new AppError('Customer not found.', 404);
-    }
-
-    return result.rows[0];
-  }
-
-  static async createCustomer(data: any): Promise<Customer> {
-    const id = (crypto as any).randomUUID ? (crypto as any).randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
-    
-    // Check duplicate email
-    const existing = await db.query('SELECT id FROM customers WHERE email = $1', [data.email.toLowerCase().trim()]);
-    if (existing.rows.length > 0) {
-      throw new AppError('Customer with this email address already exists.', 409);
-    }
-
-    const query = `
-      INSERT INTO customers (id, customer_name, mobile_number, email, business_name, gst_number, customer_type, address, status, follow_up_date, notes)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-      RETURNING *
-    `;
-
-    const values = [
-      id,
-      data.customer_name.trim(),
-      data.mobile_number.trim(),
-      data.email.toLowerCase().trim(),
-      data.business_name.trim(),
-      data.gst_number ? data.gst_number.trim() : null,
-      data.customer_type,
-      data.address.trim(),
-      data.status || 'Active',
-      data.follow_up_date || null,
-      data.notes || null,
-    ];
-
-    const result = await db.query<Customer>(query, values);
-    return result.rows[0];
-  }
-
-  static async updateCustomer(id: string, data: any): Promise<Customer> {
-    await this.getCustomerById(id);
-
-    if (data.email) {
-      const existing = await db.query('SELECT id FROM customers WHERE email = $1 AND id != $2', [
-        data.email.toLowerCase().trim(),
-        id,
-      ]);
-      if (existing.rows.length > 0) {
-        throw new AppError('Customer with this email address already exists.', 409);
-      }
-    }
-
-    const updates: string[] = [];
-    const values: any[] = [];
-    let valCount = 1;
-
-    const fields = ['customer_name', 'mobile_number', 'email', 'business_name', 'gst_number', 'customer_type', 'address', 'status', 'follow_up_date', 'notes'];
-
-    for (const field of fields) {
-      if (data[field] !== undefined) {
-        let val = data[field];
-        if (typeof val === 'string' && val.trim() === '' && ['follow_up_date', 'gst_number', 'notes'].includes(field)) {
-          val = null;
-        }
-        updates.push(`${field} = $${valCount}`);
-        values.push(val);
-        valCount++;
-      }
-    }
-
-    updates.push(`updated_at = CURRENT_TIMESTAMP`);
-    values.push(id);
-
-    const query = `
-      UPDATE customers
-      SET ${updates.join(', ')}
-      WHERE id = $${valCount}
-      RETURNING *
-    `;
-
-    const result = await db.query<Customer>(query, values);
-    return result.rows[0];
-  }
-
-  static async deleteCustomer(id: string): Promise<void> {
-    await this.getCustomerById(id);
-    await db.query('DELETE FROM customers WHERE id = $1', [id]);
-  }
-
-  static async addFollowUp(customerId: string, note: string, followUpDate?: string, userId?: string): Promise<CustomerFollowUp> {
-    await this.getCustomerById(customerId);
-
-    const id = (crypto as any).randomUUID ? (crypto as any).randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
-
-    const query = `
-      INSERT INTO customer_followups (id, customer_id, note, follow_up_date, created_by)
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING *
-    `;
-
-    const values = [id, customerId, note.trim(), followUpDate || null, userId || null];
-    const result = await db.query<CustomerFollowUp>(query, values);
-
-    // Update customer follow_up_date if provided
-    if (followUpDate) {
-      await db.query('UPDATE customers SET follow_up_date = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [
-        followUpDate,
-        customerId,
-      ]);
-    }
-
-    return result.rows[0];
-  }
-
-  static async getFollowUps(customerId: string): Promise<CustomerFollowUp[]> {
-    await this.getCustomerById(customerId);
-
-    const query = `
-      SELECT f.*, u.full_name as created_by_name
-      FROM customer_followups f
-      LEFT JOIN users u ON f.created_by = u.id
-      WHERE f.customer_id = $1
-      ORDER BY f.created_at DESC
-    `;
-
-    const result = await db.query<CustomerFollowUp>(query, [customerId]);
+export const getCustomers = async (search?: string, status?: string, type?: string) => {
+  try {
+    let sql = 'SELECT * FROM customers WHERE 1=1';
+    const params: any[] = [];
+    if (search) { params.push(`%${search}%`); sql += ` AND (name ILIKE $${params.length} OR business_name ILIKE $${params.length} OR mobile ILIKE $${params.length} OR email ILIKE $${params.length})`; }
+    if (status) { params.push(status); sql += ` AND status = $${params.length}`; }
+    if (type) { params.push(type); sql += ` AND type = $${params.length}`; }
+    sql += ' ORDER BY created_at DESC';
+    const result = await query(sql, params);
     return result.rows;
+  } catch (err: any) {
+    if (err instanceof AppError) throw err;
+    let data = [...mem.customers];
+    if (search) { const s = search.toLowerCase(); data = data.filter(c => c.name.toLowerCase().includes(s) || c.business_name.toLowerCase().includes(s) || c.mobile.includes(s) || c.email.toLowerCase().includes(s)); }
+    if (status) data = data.filter(c => c.status === status);
+    if (type) data = data.filter(c => c.type === type);
+    return data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }
-}
+};
+
+export const getCustomerById = async (id: number): Promise<Customer> => {
+  try {
+    const result = await query('SELECT * FROM customers WHERE id = $1', [id]);
+    if (result.rows.length === 0) throw new AppError('Customer not found.', 404);
+    return result.rows[0];
+  } catch (err: any) {
+    if (err instanceof AppError) throw err;
+    const c = mem.customers.find(c => c.id === id);
+    if (!c) throw new AppError('Customer not found.', 404);
+    return c;
+  }
+};
+
+export const createCustomer = async (data: Partial<Customer>): Promise<Customer> => {
+  try {
+    const { name, mobile, email, business_name, gst_number, type, address, status, followup_date, notes } = data;
+    const result = await query(
+      `INSERT INTO customers (name, mobile, email, business_name, gst_number, type, address, status, followup_date, notes) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
+      [name, mobile, email, business_name, gst_number || null, type, address, status || 'Lead', followup_date || null, notes || null]
+    );
+    return result.rows[0];
+  } catch (err: any) {
+    if (err instanceof AppError) throw err;
+    const now = new Date();
+    const c: Customer = {
+      id: mem.nextId.customer(), name: data.name!, mobile: data.mobile!, email: data.email!, business_name: data.business_name!,
+      gst_number: data.gst_number || null, type: data.type!, address: data.address!, status: data.status || 'Lead',
+      followup_date: data.followup_date || null, notes: data.notes || null, created_at: now, updated_at: now,
+    };
+    mem.customers.push(c);
+    return c;
+  }
+};
+
+export const updateCustomer = async (id: number, data: Partial<Customer>): Promise<Customer> => {
+  try {
+    await getCustomerById(id);
+    const { name, mobile, email, business_name, gst_number, type, address, status, followup_date, notes } = data;
+    const result = await query(
+      `UPDATE customers SET name=$1,mobile=$2,email=$3,business_name=$4,gst_number=$5,type=$6,address=$7,status=$8,followup_date=$9,notes=$10,updated_at=CURRENT_TIMESTAMP WHERE id=$11 RETURNING *`,
+      [name, mobile, email, business_name, gst_number || null, type, address, status, followup_date || null, notes || null, id]
+    );
+    return result.rows[0];
+  } catch (err: any) {
+    if (err instanceof AppError) throw err;
+    const idx = mem.customers.findIndex(c => c.id === id);
+    if (idx === -1) throw new AppError('Customer not found.', 404);
+    const updated = { ...mem.customers[idx], ...data, updated_at: new Date() };
+    mem.customers[idx] = updated;
+    return updated;
+  }
+};
+
+export const deleteCustomer = async (id: number): Promise<void> => {
+  try {
+    await getCustomerById(id);
+    await query('DELETE FROM customers WHERE id = $1', [id]);
+  } catch (err: any) {
+    if (err instanceof AppError) throw err;
+    const idx = mem.customers.findIndex(c => c.id === id);
+    if (idx === -1) throw new AppError('Customer not found.', 404);
+    mem.customers.splice(idx, 1);
+  }
+};
+
+export const getCustomerFollowups = async (customerId: number): Promise<CustomerFollowup[]> => {
+  try {
+    await getCustomerById(customerId);
+    const result = await query(
+      `SELECT f.*, u.name as created_by_name FROM customer_followups f JOIN users u ON f.created_by = u.id WHERE f.customer_id = $1 ORDER BY f.created_at DESC`,
+      [customerId]
+    );
+    return result.rows;
+  } catch (err: any) {
+    if (err instanceof AppError) throw err;
+    return mem.customerFollowups.filter(f => f.customer_id === customerId).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }
+};
+
+export const addCustomerFollowup = async (customerId: number, note: string, userId: number): Promise<CustomerFollowup> => {
+  try {
+    await getCustomerById(customerId);
+    const result = await query(`INSERT INTO customer_followups (customer_id, note, created_by) VALUES ($1, $2, $3) RETURNING *`, [customerId, note, userId]);
+    await query(`UPDATE customers SET notes = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`, [note, customerId]);
+    return result.rows[0];
+  } catch (err: any) {
+    if (err instanceof AppError) throw err;
+    const user = mem.users.find(u => u.id === userId);
+    const f: CustomerFollowup = { id: mem.nextId.followup(), customer_id: customerId, note, created_by: userId, created_by_name: user?.name || 'User', created_at: new Date() };
+    mem.customerFollowups.push(f);
+    const cIdx = mem.customers.findIndex(c => c.id === customerId);
+    if (cIdx !== -1) { mem.customers[cIdx].notes = note; mem.customers[cIdx].updated_at = new Date(); }
+    return f;
+  }
+};
